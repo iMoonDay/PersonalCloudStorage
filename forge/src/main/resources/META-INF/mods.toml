@@ -1,0 +1,29 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+#issueTrackerURL = ""
+license = "MIT"
+
+[[mods]]
+modId = "personalcloudstorage"
+version = "${version}"
+displayName = "PersonalCloudStorage"
+authors = "iMoonDay"
+description = '''
+Create your own personal cloud storage with endless expansion and seamless item management
+'''
+#logoFile = ""
+
+[[dependencies.personalcloudstorage]]
+modId = "forge"
+mandatory = true
+versionRange = "[47,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.personalcloudstorage]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.1,)"
+ordering = "NONE"
+side = "BOTH"
+

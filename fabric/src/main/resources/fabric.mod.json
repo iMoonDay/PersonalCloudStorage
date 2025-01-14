@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "personalcloudstorage",
+  "version": "${version}",
+  "name": "PersonalCloudStorage",
+  "description": "Create your own personal cloud storage with endless expansion and seamless item management",
+  "authors": [
+    "iMoonDay"
+  ],
+  "contact": {
+    "homepage": ""
+  },
+  "license": "MIT",
+  "icon": "assets/personalcloudstorage/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.imoonday.personalcloudstorage.fabric.PersonalCloudStorageFabric"
+    ],
+    "client": [
+      "com.imoonday.personalcloudstorage.fabric.client.PersonalCloudStorageFabricClient"
+    ]
+  },
+  "mixins": [
+    "personalcloudstorage.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
