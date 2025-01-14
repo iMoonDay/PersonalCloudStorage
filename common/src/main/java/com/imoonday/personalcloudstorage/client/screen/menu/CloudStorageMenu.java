@@ -6,12 +6,14 @@ import com.imoonday.personalcloudstorage.component.CloudStorage;
 import com.imoonday.personalcloudstorage.component.PagedList;
 import com.imoonday.personalcloudstorage.component.PagedSlot;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
+import com.imoonday.personalcloudstorage.mixin.SlotAccessor;
 import com.imoonday.personalcloudstorage.network.SlotActionC2SPacket;
 import com.imoonday.personalcloudstorage.network.UpdateCloudStorageS2CPacket;
 import com.imoonday.personalcloudstorage.platform.Services;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -162,13 +164,13 @@ public class CloudStorageMenu extends AbstractContainerMenu implements SlotActio
                         if (clicked.isEmpty()) {
                             this.setCarried(clickedSlot.replaceItem(carried));
                         } else {
-                            this.setCarried(clickedSlot.combine(carried));
+                            this.setCarried(clickedSlot.merge(carried));
                         }
                     } else if (!clicked.isEmpty()) {
                         this.setCarried(clickedSlot.takeItem());
                     }
                 } else if (!clicked.isEmpty()) {
-                    this.moveItemStackTo(clicked, 0, slots.size(), false);
+                    this.moveItemStackTo(clicked, 0, slots.size(), true);
                 }
                 updateSlotToClient(clickedSlot);
             }
@@ -179,7 +181,7 @@ public class CloudStorageMenu extends AbstractContainerMenu implements SlotActio
                     }
                 } else if (clicked.isEmpty()) {
                     clickedSlot.replaceItem(carried.split(1));
-                } else if (clickedSlot.combine(carried.copyWithCount(1)).isEmpty()) {
+                } else if (clickedSlot.merge(carried.copyWithCount(1)).isEmpty()) {
                     carried.split(1);
                 }
                 updateSlotToClient(clickedSlot);
@@ -195,6 +197,17 @@ public class CloudStorageMenu extends AbstractContainerMenu implements SlotActio
     private void updateSlotToClient(PagedSlot slot) {
         if (player instanceof ServerPlayer serverPlayer) {
             Services.PLATFORM.sendToPlayer(serverPlayer, new UpdateCloudStorageS2CPacket(UpdateCloudStorageS2CPacket.Type.SLOT, slot.toTag(new CompoundTag())));
+        }
+    }
+
+    private static class MutableSlot extends Slot {
+
+        public MutableSlot(Container container, int slot, int x, int y) {
+            super(container, slot, x, y);
+        }
+
+        public void setContainer(Container container) {
+            ((SlotAccessor) this).setContainer(container);
         }
     }
 

@@ -11,6 +11,7 @@ import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class ClientEventHandler {
@@ -20,11 +21,10 @@ public class ClientEventHandler {
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(ClientEventHandler::registerKeys);
+        modEventBus.addListener(ClientEventHandler::registerMenuScreens);
 
         IEventBus eventBus = MinecraftForge.EVENT_BUS;
         eventBus.addListener(ClientEventHandler::onClientTick);
-
-        registerMenuScreens();
     }
 
     private static void registerKeys(RegisterKeyMappingsEvent e) {
@@ -43,7 +43,7 @@ public class ClientEventHandler {
         }
     }
 
-    private static void registerMenuScreens() {
+    private static void registerMenuScreens(FMLClientSetupEvent e) {
         MenuScreens.register(ModMenuType.CLOUD_STORAGE.get(), CloudStorageScreen::new);
     }
 }

@@ -63,8 +63,8 @@ public class PagedSlot {
         return splitItem;
     }
 
-    public ItemStack combine(ItemStack item) {
-        if (!canCombine(item)) {
+    public ItemStack merge(ItemStack item) {
+        if (!canMerge(item)) {
             return item;
         }
         int newCount = this.item.getCount() + item.getCount();
@@ -74,11 +74,11 @@ public class PagedSlot {
         }
         int increment = newCount - this.item.getCount();
         this.item.setCount(newCount);
-        item.split(increment);
+        item.shrink(increment);
         return item;
     }
 
-    public boolean canCombine(ItemStack item) {
+    public boolean canMerge(ItemStack item) {
         return isSameItemSameTags(item) && this.item.getCount() < this.item.getMaxStackSize();
     }
 
@@ -88,7 +88,7 @@ public class PagedSlot {
 
     public ItemStack replaceItem(ItemStack item) {
         ItemStack oldItem = this.item;
-        this.item = item.copy();
+        this.item = item;
         if (oldItem.isEmpty()) {
             return ItemStack.EMPTY;
         }

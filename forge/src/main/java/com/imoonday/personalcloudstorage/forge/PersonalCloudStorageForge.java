@@ -31,7 +31,7 @@ public final class PersonalCloudStorageForge {
     }
 
     @SubscribeEvent
-    private void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         if (player instanceof ServerPlayer serverPlayer) {
             EventHandler.onPlayerJoin(serverPlayer);
@@ -39,7 +39,7 @@ public final class PersonalCloudStorageForge {
     }
 
     @SubscribeEvent
-    private void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         Player player = event.getEntity();
         if (player instanceof ServerPlayer serverPlayer) {
             EventHandler.onPlayerJoin(serverPlayer);
@@ -47,7 +47,7 @@ public final class PersonalCloudStorageForge {
     }
 
     @SubscribeEvent
-    private void onPlayerClone(PlayerEvent.Clone event) {
+    public void onPlayerClone(PlayerEvent.Clone event) {
         Player oldPlayer = event.getOriginal();
         Player newPlayer = event.getEntity();
         if (oldPlayer instanceof ServerPlayer oldServerPlayer && newPlayer instanceof ServerPlayer newServerPlayer) {

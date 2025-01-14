@@ -154,8 +154,8 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
         }
         PagedSlot emptySlot = null;
         for (PagedSlot pagedSlot : slots) {
-            if (pagedSlot.canCombine(item)) {
-                pagedSlot.combine(item);
+            if (pagedSlot.canMerge(item)) {
+                pagedSlot.merge(item);
                 if (item.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
@@ -164,8 +164,7 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
             }
         }
         if (!item.isEmpty() && emptySlot != null) {
-            emptySlot.replaceItem(item);
-            item.setCount(0);
+            emptySlot.replaceItem(item.copyAndClear());
             return ItemStack.EMPTY;
         }
         return item;
