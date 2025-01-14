@@ -1,9 +1,7 @@
 package com.imoonday.personalcloudstorage.forge.network;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
-import com.imoonday.personalcloudstorage.network.NetworkPacket;
-import com.imoonday.personalcloudstorage.network.OpenCloudStorageC2SRequest;
-import com.imoonday.personalcloudstorage.network.SyncCloudStorageS2CPacket;
+import com.imoonday.personalcloudstorage.network.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,6 +26,8 @@ public class ForgeNetworkHandler {
         PersonalCloudStorage.LOGGER.info(String.format("Initializing %s network...", PersonalCloudStorage.MOD_ID));
         SIMPLE_CHANNEL.registerMessage(0, OpenCloudStorageC2SRequest.class, OpenCloudStorageC2SRequest::write, OpenCloudStorageC2SRequest::new, ForgeNetworkHandler::handle);
         SIMPLE_CHANNEL.registerMessage(1, SyncCloudStorageS2CPacket.class, SyncCloudStorageS2CPacket::write, SyncCloudStorageS2CPacket::new, ForgeNetworkHandler::handle);
+        SIMPLE_CHANNEL.registerMessage(2, SlotActionC2SPacket.class, SlotActionC2SPacket::write, SlotActionC2SPacket::new, ForgeNetworkHandler::handle);
+        SIMPLE_CHANNEL.registerMessage(3, UpdateCloudStorageS2CPacket.class, UpdateCloudStorageS2CPacket::write, UpdateCloudStorageS2CPacket::new, ForgeNetworkHandler::handle);
         PersonalCloudStorage.LOGGER.info(String.format("Initialized %s network!", PersonalCloudStorage.MOD_ID));
     }
 

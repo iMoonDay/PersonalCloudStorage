@@ -29,6 +29,14 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
         clear();
     }
 
+    public PagedList copy() {
+        ArrayList<PagedSlot> slots = new ArrayList<>(this.slots.size());
+        for (PagedSlot slot : this.slots) {
+            slots.add(slot.copyWithItem());
+        }
+        return new PagedList(slots, page, size);
+    }
+
     public static PagedList create(int page, int size) {
         Validate.isTrue(size > 0, "Size must be greater than 0");
         ArrayList<PagedSlot> items = new ArrayList<>(size);
@@ -157,6 +165,7 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
         }
         if (!item.isEmpty() && emptySlot != null) {
             emptySlot.replaceItem(item);
+            item.setCount(0);
             return ItemStack.EMPTY;
         }
         return item;

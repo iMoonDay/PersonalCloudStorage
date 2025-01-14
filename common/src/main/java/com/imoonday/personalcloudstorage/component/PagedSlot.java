@@ -64,7 +64,7 @@ public class PagedSlot {
     }
 
     public ItemStack combine(ItemStack item) {
-        if (!isSameItemSameTags(item)) {
+        if (!canCombine(item)) {
             return item;
         }
         int newCount = this.item.getCount() + item.getCount();
@@ -74,7 +74,8 @@ public class PagedSlot {
         }
         int increment = newCount - this.item.getCount();
         this.item.setCount(newCount);
-        return item.split(increment);
+        item.split(increment);
+        return item;
     }
 
     public boolean canCombine(ItemStack item) {
@@ -87,7 +88,10 @@ public class PagedSlot {
 
     public ItemStack replaceItem(ItemStack item) {
         ItemStack oldItem = this.item;
-        this.item = item;
+        this.item = item.copy();
+        if (oldItem.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
         return oldItem;
     }
 
@@ -99,8 +103,20 @@ public class PagedSlot {
         return ItemStack.isSameItemSameTags(this.item, item);
     }
 
+    public PagedSlot copyWithItem() {
+        return new PagedSlot(item.copy(), page, slot);
+    }
+
     public ItemStack copy() {
         return item.copy();
+    }
+
+    public ItemStack copyWithCount(int count) {
+        return item.copyWithCount(count);
+    }
+
+    public boolean isSamePosition(PagedSlot other) {
+        return page == other.page && slot == other.slot;
     }
 
     public CompoundTag toTag(CompoundTag tag) {

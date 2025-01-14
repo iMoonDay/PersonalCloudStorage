@@ -30,7 +30,7 @@ public abstract class PlayerMixin extends LivingEntity implements CloudStorageCo
     @Override
     public CloudStorage getCloudStorage() {
         if (cloudStorage == null) {
-            cloudStorage = new CloudStorage(this.getUUID(), 36);
+            cloudStorage = new CloudStorage(36);
         }
         return cloudStorage;
     }

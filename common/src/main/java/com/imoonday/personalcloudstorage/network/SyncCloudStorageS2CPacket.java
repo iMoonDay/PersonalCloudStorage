@@ -1,5 +1,6 @@
 package com.imoonday.personalcloudstorage.network;
 
+import com.imoonday.personalcloudstorage.client.screen.menu.CloudStorageMenu;
 import com.imoonday.personalcloudstorage.component.CloudStorage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -28,6 +29,9 @@ public class SyncCloudStorageS2CPacket implements NetworkPacket {
     public void handle(@Nullable Player player) {
         if (!(player instanceof ServerPlayer)) {
             CloudStorage.of(player).readFrom(tag);
+            if (player != null && player.containerMenu instanceof CloudStorageMenu menu) {
+                menu.updateRenderingSlots();
+            }
         }
     }
 }

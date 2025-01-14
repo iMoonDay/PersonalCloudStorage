@@ -23,7 +23,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     @Inject(method = "init", at = @At("TAIL"))
     private void init(CallbackInfo ci) {
         Button button = Button.builder(Component.literal("Cloud"), button1 -> ClientUtils.openCloudStorage(this.minecraft))
-                              .bounds(this.leftPos + 104 + 30, this.height / 2 - 22, 50, 20)
+                              .bounds(this.leftPos + 104 + 30, this.height / 2 - 22, 20, 20)
                               .build();
         this.addRenderableWidget(button);
     }
