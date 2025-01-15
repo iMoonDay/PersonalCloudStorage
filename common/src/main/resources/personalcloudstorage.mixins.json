@@ -7,8 +7,8 @@
     "InventoryScreenMixin"
   ],
   "mixins": [
+    "PlayerListMixin",
     "PlayerMixin",
-    "ServerPlayerMixin",
     "SlotAccessor"
   ],
   "injectors": {

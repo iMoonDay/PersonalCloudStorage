@@ -4,6 +4,7 @@ import com.imoonday.personalcloudstorage.client.KeyBinding;
 import com.imoonday.personalcloudstorage.client.ModKeys;
 import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
 import com.imoonday.personalcloudstorage.client.screen.CloudStorageScreen;
+import com.imoonday.personalcloudstorage.event.EventHandler;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -40,6 +41,7 @@ public class ClientEventHandler {
                     key.onPress(Minecraft.getInstance());
                 }
             }
+            EventHandler.onClientTick(Minecraft.getInstance().player);
         }
     }
 

@@ -6,6 +6,7 @@ import com.imoonday.personalcloudstorage.fabric.network.FabricNetworkHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class PersonalCloudStorageFabric implements ModInitializer {
 
@@ -18,13 +19,15 @@ public final class PersonalCloudStorageFabric implements ModInitializer {
 
     private void registerEvents() {
         ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
-            EventHandler.onPlayerCopy(oldPlayer, newPlayer);
+            EventHandler.onPlayerClone(oldPlayer, newPlayer);
         });
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
-            EventHandler.onPlayerJoin(newPlayer);
+            EventHandler.syncToClient(newPlayer);
         });
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            EventHandler.onPlayerJoin(handler.player);
+        ServerPlayConnectionEvents.JOIN.register((serverGamePacketListener, packetSender, minecraftServer) -> {
+            ServerPlayer player = serverGamePacketListener.player;
+//            CloudStorage.of(player).updatePageSize(3);
+            EventHandler.syncToClient(player);
         });
     }
 }

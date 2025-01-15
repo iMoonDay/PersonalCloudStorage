@@ -4,6 +4,7 @@ import com.imoonday.personalcloudstorage.client.KeyBinding;
 import com.imoonday.personalcloudstorage.client.ModKeys;
 import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
 import com.imoonday.personalcloudstorage.client.screen.CloudStorageScreen;
+import com.imoonday.personalcloudstorage.event.EventHandler;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -17,6 +18,9 @@ public final class PersonalCloudStorageFabricClient implements ClientModInitiali
         PersonalCloudStorageClient.initClient();
         registerKeys();
         registerMenuScreens();
+        ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
+            EventHandler.onClientTick(minecraft.player);
+        });
     }
 
     private void registerKeys() {

@@ -8,7 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -21,8 +20,6 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
     private final List<PagedSlot> slots;
     private final int page;
     private int size;
-    @Nullable
-    private Runnable onChange;
 
     @Override
     public void clearContent() {
@@ -87,19 +84,19 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
         return slots.get(index);
     }
 
-    public ItemStack getItem(int index) {
+    public @NotNull ItemStack getItem(int index) {
         if (!isValidIndex(index)) return ItemStack.EMPTY;
         return get(index).getItem();
     }
 
     @Override
-    public ItemStack removeItem(int slot, int amount) {
+    public @NotNull ItemStack removeItem(int slot, int amount) {
         if (!isValidIndex(slot)) return ItemStack.EMPTY;
         return get(slot).split(amount);
     }
 
     @Override
-    public ItemStack removeItemNoUpdate(int slot) {
+    public @NotNull ItemStack removeItemNoUpdate(int slot) {
         return takeItem(slot);
     }
 
@@ -109,15 +106,9 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
         get(slot).replaceItem(stack);
     }
 
-    public void setSaveAction(Runnable action) {
-        this.onChange = action;
-    }
-
     @Override
     public void setChanged() {
-        if (onChange != null) {
-            onChange.run();
-        }
+
     }
 
     @Override

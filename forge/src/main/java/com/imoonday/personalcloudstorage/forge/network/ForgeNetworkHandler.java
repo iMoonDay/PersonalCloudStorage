@@ -25,9 +25,9 @@ public class ForgeNetworkHandler {
     public static void init() {
         PersonalCloudStorage.LOGGER.info(String.format("Initializing %s network...", PersonalCloudStorage.MOD_ID));
         SIMPLE_CHANNEL.registerMessage(0, OpenCloudStorageC2SRequest.class, OpenCloudStorageC2SRequest::write, OpenCloudStorageC2SRequest::new, ForgeNetworkHandler::handle);
-        SIMPLE_CHANNEL.registerMessage(1, SyncCloudStorageS2CPacket.class, SyncCloudStorageS2CPacket::write, SyncCloudStorageS2CPacket::new, ForgeNetworkHandler::handle);
-        SIMPLE_CHANNEL.registerMessage(2, SlotActionC2SPacket.class, SlotActionC2SPacket::write, SlotActionC2SPacket::new, ForgeNetworkHandler::handle);
-        SIMPLE_CHANNEL.registerMessage(3, UpdateCloudStorageS2CPacket.class, UpdateCloudStorageS2CPacket::write, UpdateCloudStorageS2CPacket::new, ForgeNetworkHandler::handle);
+        SIMPLE_CHANNEL.registerMessage(1, PageC2SRequest.class, PageC2SRequest::write, PageC2SRequest::new, ForgeNetworkHandler::handle);
+        SIMPLE_CHANNEL.registerMessage(2, UpdateCloudStorageS2CPacket.class, UpdateCloudStorageS2CPacket::write, UpdateCloudStorageS2CPacket::new, ForgeNetworkHandler::handle);
+        SIMPLE_CHANNEL.registerMessage(3, RequestUpdateC2SRequest.class, RequestUpdateC2SRequest::write, RequestUpdateC2SRequest::new, ForgeNetworkHandler::handle);
         PersonalCloudStorage.LOGGER.info(String.format("Initialized %s network!", PersonalCloudStorage.MOD_ID));
     }
 

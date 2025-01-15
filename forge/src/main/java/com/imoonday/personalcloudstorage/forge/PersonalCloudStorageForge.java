@@ -1,6 +1,7 @@
 package com.imoonday.personalcloudstorage.forge;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
+import com.imoonday.personalcloudstorage.component.CloudStorage;
 import com.imoonday.personalcloudstorage.event.EventHandler;
 import com.imoonday.personalcloudstorage.forge.client.ClientEventHandler;
 import com.imoonday.personalcloudstorage.forge.network.ForgeNetworkHandler;
@@ -31,18 +32,11 @@ public final class PersonalCloudStorageForge {
     }
 
     @SubscribeEvent
-    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+    public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         if (player instanceof ServerPlayer serverPlayer) {
-            EventHandler.onPlayerJoin(serverPlayer);
-        }
-    }
-
-    @SubscribeEvent
-    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        Player player = event.getEntity();
-        if (player instanceof ServerPlayer serverPlayer) {
-            EventHandler.onPlayerJoin(serverPlayer);
+            CloudStorage.of(player).updatePageSize(3);
+            EventHandler.syncToClient(serverPlayer);
         }
     }
 
@@ -51,7 +45,15 @@ public final class PersonalCloudStorageForge {
         Player oldPlayer = event.getOriginal();
         Player newPlayer = event.getEntity();
         if (oldPlayer instanceof ServerPlayer oldServerPlayer && newPlayer instanceof ServerPlayer newServerPlayer) {
-            EventHandler.onPlayerCopy(oldServerPlayer, newServerPlayer);
+            EventHandler.onPlayerClone(oldServerPlayer, newServerPlayer);
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        Player player = event.getEntity();
+        if (player instanceof ServerPlayer serverPlayer) {
+            EventHandler.syncToClient(serverPlayer);
         }
     }
 }
