@@ -2,9 +2,9 @@ package com.imoonday.personalcloudstorage.fabric.network;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
 import com.imoonday.personalcloudstorage.network.OpenCloudStorageC2SRequest;
-import com.imoonday.personalcloudstorage.network.PageC2SRequest;
-import com.imoonday.personalcloudstorage.network.RequestUpdateC2SRequest;
-import com.imoonday.personalcloudstorage.network.UpdateCloudStorageS2CPacket;
+import com.imoonday.personalcloudstorage.network.RequestSyncC2SRequest;
+import com.imoonday.personalcloudstorage.network.SyncCloudStorageS2CPacket;
+import com.imoonday.personalcloudstorage.network.SyncConfigS2CPacket;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -29,9 +29,9 @@ public class FabricNetworkHandler {
     public static void init() {
         PersonalCloudStorage.LOGGER.info(String.format("Initializing %s network...", PersonalCloudStorage.MOD_ID));
         registerMessage("open_cloud_storage", OpenCloudStorageC2SRequest.class, OpenCloudStorageC2SRequest::write, OpenCloudStorageC2SRequest::new, OpenCloudStorageC2SRequest::handle);
-        registerMessage("page", PageC2SRequest.class, PageC2SRequest::write, PageC2SRequest::new, PageC2SRequest::handle);
-        registerMessage("update_cloud_storage", UpdateCloudStorageS2CPacket.class, UpdateCloudStorageS2CPacket::write, UpdateCloudStorageS2CPacket::new, UpdateCloudStorageS2CPacket::handle);
-        registerMessage("request_update", RequestUpdateC2SRequest.class, RequestUpdateC2SRequest::write, RequestUpdateC2SRequest::new, RequestUpdateC2SRequest::handle);
+        registerMessage("sync_cloud_storage", SyncCloudStorageS2CPacket.class, SyncCloudStorageS2CPacket::write, SyncCloudStorageS2CPacket::new, SyncCloudStorageS2CPacket::handle);
+        registerMessage("request_sync", RequestSyncC2SRequest.class, RequestSyncC2SRequest::write, RequestSyncC2SRequest::new, RequestSyncC2SRequest::handle);
+        registerMessage("sync_config", SyncConfigS2CPacket.class, SyncConfigS2CPacket::write, SyncConfigS2CPacket::new, SyncConfigS2CPacket::handle);
         PersonalCloudStorage.LOGGER.info(String.format("Initialized %s network!", PersonalCloudStorage.MOD_ID));
     }
 

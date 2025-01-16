@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.Item;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -22,6 +23,22 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public Path getConfigDir() {
         return FabricLoader.getInstance().getConfigDir();
+    }
+
+    @Override
+    public boolean isDevelopmentEnvironment() {
+        return FabricLoader.getInstance().isDevelopmentEnvironment();
+    }
+
+    @Override
+    public boolean isModLoaded(String modId) {
+        return FabricLoader.getInstance().isModLoaded(modId);
+    }
+
+    @Override
+    public <T extends Item> Supplier<T> registerItem(String id, Supplier<T> supplier) {
+        T item = Registry.register(BuiltInRegistries.ITEM, PersonalCloudStorage.id(id), supplier.get());
+        return () -> item;
     }
 
     @Override

@@ -1,12 +1,16 @@
 package com.imoonday.personalcloudstorage.fabric;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
+import com.imoonday.personalcloudstorage.command.CommandHandler;
 import com.imoonday.personalcloudstorage.event.EventHandler;
 import com.imoonday.personalcloudstorage.fabric.network.FabricNetworkHandler;
+import com.imoonday.personalcloudstorage.init.ModItems;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.CreativeModeTabs;
 
 public final class PersonalCloudStorageFabric implements ModInitializer {
 
@@ -18,16 +22,14 @@ public final class PersonalCloudStorageFabric implements ModInitializer {
     }
 
     private void registerEvents() {
-        ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
-            EventHandler.onPlayerClone(oldPlayer, newPlayer);
+        ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
+            EventHandler.syncToClient(listener.player);
         });
-        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
-            EventHandler.syncToClient(newPlayer);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(entries -> {
+            entries.accept(ModItems.CLOUD_CORE.get());
+            entries.accept(ModItems.PARTITION_NODE.get());
         });
-        ServerPlayConnectionEvents.JOIN.register((serverGamePacketListener, packetSender, minecraftServer) -> {
-            ServerPlayer player = serverGamePacketListener.player;
-//            CloudStorage.of(player).updatePageSize(3);
-            EventHandler.syncToClient(player);
-        });
+        CommandRegistrationCallback.EVENT.register(CommandHandler::registerCommands);
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> EventHandler.loadConfig());
     }
 }

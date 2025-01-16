@@ -20,6 +20,7 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
     private final List<PagedSlot> slots;
     private final int page;
     private int size;
+    private boolean removed;
 
     @Override
     public void clearContent() {
@@ -111,9 +112,17 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
 
     }
 
+    public boolean isRemoved() {
+        return removed;
+    }
+
+    public void setRemoved(boolean removed) {
+        this.removed = removed;
+    }
+
     @Override
     public boolean stillValid(Player player) {
-        return this != EMPTY;
+        return this != EMPTY && this.size > 0 && !this.removed;
     }
 
     @Override
@@ -234,12 +243,12 @@ public class PagedList extends AbstractList<PagedSlot> implements Container {
         return true;
     }
 
-    public CompoundTag toTag(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag) {
         tag.putInt("page", page);
         tag.putInt("size", size);
         ListTag slotTags = new ListTag();
         for (PagedSlot slot : slots) {
-            slotTags.add(slot.toTag(new CompoundTag()));
+            slotTags.add(slot.save(new CompoundTag()));
         }
         tag.put("slots", slotTags);
         return tag;

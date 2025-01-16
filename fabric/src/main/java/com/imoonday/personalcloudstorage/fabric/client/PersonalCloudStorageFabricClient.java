@@ -1,14 +1,15 @@
 package com.imoonday.personalcloudstorage.fabric.client;
 
+import com.imoonday.personalcloudstorage.client.ClientUtils;
 import com.imoonday.personalcloudstorage.client.KeyBinding;
 import com.imoonday.personalcloudstorage.client.ModKeys;
 import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
 import com.imoonday.personalcloudstorage.client.screen.CloudStorageScreen;
-import com.imoonday.personalcloudstorage.event.EventHandler;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.gui.screens.MenuScreens;
 
 public final class PersonalCloudStorageFabricClient implements ClientModInitializer {
@@ -19,7 +20,10 @@ public final class PersonalCloudStorageFabricClient implements ClientModInitiali
         registerKeys();
         registerMenuScreens();
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
-            EventHandler.onClientTick(minecraft.player);
+            ClientUtils.onClientTick(minecraft.player);
+        });
+        ClientPlayConnectionEvents.DISCONNECT.register((listener, minecraft) -> {
+            ClientUtils.onDisconnect();
         });
     }
 
@@ -29,8 +33,10 @@ public final class PersonalCloudStorageFabricClient implements ClientModInitiali
         }
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
             for (KeyBinding key : ModKeys.KEYS) {
-                while (key.getKeyMapping().consumeClick()) {
-                    key.onPress(minecraft);
+                if (key.hasPressAction()) {
+                    while (key.getKeyMapping().consumeClick()) {
+                        key.onPress(minecraft);
+                    }
                 }
             }
         });

@@ -119,7 +119,7 @@ public class PagedSlot {
         return page == other.page && slot == other.slot;
     }
 
-    public CompoundTag toTag(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag) {
         tag.putInt("page", page);
         tag.putInt("slot", slot);
         if (!item.isEmpty()) {

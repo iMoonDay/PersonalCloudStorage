@@ -2,36 +2,50 @@ package com.imoonday.personalcloudstorage.client.screen.menu;
 
 import com.imoonday.personalcloudstorage.component.CloudStorage;
 import com.imoonday.personalcloudstorage.component.PagedList;
+import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.init.ModItems;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import com.imoonday.personalcloudstorage.mixin.SlotAccessor;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CloudStorageMenu extends AbstractContainerMenu {
 
+    public static final int PREVIOUS_PAGE_BUTTON_ID = 0;
+    public static final int NEXT_PAGE_BUTTON_ID = 1;
+    public static final int ADD_PAGE_BUTTON_ID = 2;
+    public static final int REMOVE_PAGE_BUTTON_ID = 3;
     private final Level level;
     private final CloudStorage cloudStorage;
     private final int containerRows;
     private final List<MutableSlot> mutableSlots = new ArrayList<>();
     private PagedList page;
+    private final DataSlot currentPage = DataSlot.standalone();
 
     public CloudStorageMenu(int containerId, Inventory playerInventory) {
+        this(containerId, playerInventory, CloudStorage.of(playerInventory.player));
+    }
+
+    public CloudStorageMenu(int containerId, Inventory playerInventory, CloudStorage cloudStorage) {
         super(ModMenuType.CLOUD_STORAGE.get(), containerId);
 
         Player player = playerInventory.player;
         this.level = player.level();
-        this.cloudStorage = CloudStorage.of(player);
-        this.page = cloudStorage.getPage(0);
+        this.cloudStorage = cloudStorage;
+        this.page = this.cloudStorage.getPage(0);
         this.updateSlots();
-        this.containerRows = cloudStorage.getPageRows();
+        this.containerRows = this.cloudStorage.getPageRows();
 
         int i;
         int j;
@@ -53,8 +67,11 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         for (i = 0; i < 9; ++i) {
             this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 161 + offset));
         }
+
+        this.addDataSlot(currentPage).set(0);
     }
 
+    @NotNull
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         ItemStack itemStack = ItemStack.EMPTY;
@@ -82,20 +99,95 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public boolean stillValid(Player player) {
-        return page.stillValid(player);
+    public boolean clickMenuButton(Player player, int id) {
+        switch (id) {
+            case PREVIOUS_PAGE_BUTTON_ID -> {
+                previousPage();
+                return true;
+            }
+            case NEXT_PAGE_BUTTON_ID -> {
+                nextPage();
+                return true;
+            }
+            case ADD_PAGE_BUTTON_ID -> {
+                if (disallowModification(player)) {
+                    player.sendSystemMessage(Component.translatable("message.personalcloudstorage.cannot_modify"));
+                    return false;
+                }
+                return addPage(player);
+            }
+            case REMOVE_PAGE_BUTTON_ID -> {
+                if (disallowModification(player)) {
+                    player.sendSystemMessage(Component.translatable("message.personalcloudstorage.cannot_modify"));
+                    return false;
+                }
+                return removePage(player);
+            }
+        }
+        return super.clickMenuButton(player, id);
     }
 
-    public Level getLevel() {
-        return level;
+    public boolean disallowModification(Player player) {
+        return !(player.level().isClientSide ? ServerConfig.getClientCache() : ServerConfig.get()).modifyStorageOfOthers && !player.getUUID().equals(cloudStorage.getPlayerUUID());
+    }
+
+    public boolean removePage(Player player) {
+        int result = cloudStorage.removeLastPageIfEmpty();
+        if (result == 1) {
+            if (!player.getAbilities().instabuild) {
+                ItemStack stack = new ItemStack(ModItems.PARTITION_NODE.get(), 1);
+                if (!player.addItem(stack)) {
+                    player.spawnAtLocation(stack);
+                }
+            }
+            cloudStorage.syncToClient(player);
+            updateSlots();
+            return true;
+        } else if (result == 0) {
+            player.sendSystemMessage(Component.translatable("message.personalcloudstorage.not_empty"));
+        } else {
+            player.sendSystemMessage(Component.translatable("message.personalcloudstorage.at_least_one"));
+        }
+        return false;
+    }
+
+    public boolean addPage(Player player) {
+        if (checkAddAvailable(player, true)) {
+            int totalPages = cloudStorage.getTotalPages();
+            int newTotalPages = cloudStorage.addNewPage() + 1;
+            cloudStorage.syncToClient(player);
+            updateSlots();
+            return newTotalPages > totalPages;
+        }
+        return false;
+    }
+
+    public boolean checkAddAvailable(Player player, boolean shrink) {
+        if (player.getAbilities().instabuild) {
+            return true;
+        }
+        return player.getInventory().hasAnyMatching(stack -> {
+            if (stack.is(ModItems.PARTITION_NODE.get())) {
+                if (shrink) {
+                    stack.shrink(1);
+                }
+                return true;
+            }
+            return false;
+        });
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return page.stillValid(player);
     }
 
     public CloudStorage getCloudStorage() {
         return cloudStorage;
     }
 
-    public PagedList getPage() {
-        return page;
+    public int getCurrentPage() {
+        return currentPage.get();
     }
 
     public void nextPage() {
@@ -110,6 +202,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
 
     public void updateSlots() {
         page = cloudStorage.getPage(page.getPage());
+        currentPage.set(page.getPage());
         for (MutableSlot mutableSlot : mutableSlots) {
             mutableSlot.updateContainer(page);
         }
@@ -119,7 +212,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     }
 
     public int getContainerRows() {
-        return containerRows;
+        return this.containerRows;
     }
 
     private static class MutableSlot extends Slot {

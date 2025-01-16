@@ -1,5 +1,7 @@
 package com.imoonday.personalcloudstorage;
 
+import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.init.ModItems;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
@@ -11,6 +13,8 @@ public final class PersonalCloudStorage {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public static void init() {
+        ServerConfig.load();
+        ModItems.init();
         ModMenuType.init();
     }
 

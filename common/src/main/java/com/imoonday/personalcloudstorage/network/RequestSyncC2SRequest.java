@@ -6,13 +6,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
-public class RequestUpdateC2SRequest implements NetworkPacket {
+public class RequestSyncC2SRequest implements NetworkPacket {
 
-    public RequestUpdateC2SRequest() {
+    public RequestSyncC2SRequest() {
 
     }
 
-    public RequestUpdateC2SRequest(FriendlyByteBuf buf) {
+    public RequestSyncC2SRequest(FriendlyByteBuf buf) {
 
     }
 
