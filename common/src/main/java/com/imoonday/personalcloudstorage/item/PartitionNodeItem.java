@@ -37,7 +37,7 @@ public class PartitionNodeItem extends Item {
                 if (!player.getAbilities().instabuild) {
                     stack.shrink(1);
                 }
-                level.playSound(null, serverPlayer.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS);
+                level.playSound(null, serverPlayer.blockPosition(), SoundEvents.SMITHING_TABLE_USE, SoundSource.PLAYERS);
                 serverPlayer.sendSystemMessage(Component.translatable(this.getDescriptionId() + ".success", cloudStorage.getTotalPages()));
             } else {
                 serverPlayer.sendSystemMessage(Component.translatable(this.getDescriptionId() + ".failure"), true);

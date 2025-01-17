@@ -23,7 +23,7 @@ public final class PersonalCloudStorageFabric implements ModInitializer {
 
     private void registerEvents() {
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
-            EventHandler.syncToClient(listener.player);
+            EventHandler.onPlayerJoin(listener.player);
         });
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(entries -> {
             entries.accept(ModItems.CLOUD_CORE.get());

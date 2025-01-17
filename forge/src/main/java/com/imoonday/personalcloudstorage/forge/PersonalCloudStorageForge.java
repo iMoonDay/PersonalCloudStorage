@@ -41,7 +41,7 @@ public final class PersonalCloudStorageForge {
 
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        EventHandler.syncToClient(event.getEntity());
+        EventHandler.onPlayerJoin(event.getEntity());
     }
 
     @SubscribeEvent

@@ -1,6 +1,7 @@
 package com.imoonday.personalcloudstorage.command;
 
 import com.imoonday.personalcloudstorage.component.CloudStorage;
+import com.imoonday.personalcloudstorage.config.ServerConfig;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -20,10 +21,10 @@ public class SetPagesCommand {
         return literal("pages")
                 .then(argument("uuid_or_name", StringArgumentType.string())
                               .suggests(CommandHandler::suggestNameAndUUID)
-                              .then(argument("pages", IntegerArgumentType.integer(1, 1000000))
+                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.DEFAULT_MAX_PAGES))
                                             .executes(SetPagesCommand::setPagesWithUUIDOrName)))
                 .then(argument("player", EntityArgument.player())
-                              .then(argument("pages", IntegerArgumentType.integer(1, 1000000))
+                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.DEFAULT_MAX_PAGES))
                                             .executes(SetPagesCommand::setPagesWithPlayer)));
     }
 
@@ -34,6 +35,10 @@ public class SetPagesCommand {
 
         if (cloudStorage != null) {
             cloudStorage.updateTotalPages(pages);
+            ServerPlayer onlinePlayer = cloudStorage.findOnlinePlayer(context.getSource().getServer());
+            if (onlinePlayer != null) {
+                cloudStorage.syncToClient(onlinePlayer);
+            }
             sendSuccess(context, cloudStorage);
             return 1;
         }
@@ -47,20 +52,9 @@ public class SetPagesCommand {
         int pages = IntegerArgumentType.getInteger(context, "pages");
         CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
         cloudStorage.updateTotalPages(pages);
+        cloudStorage.syncToClient(targetPlayer);
         sendSuccess(context, cloudStorage);
         return 1;
-    }
-
-    private static int setPages(CommandContext<CommandSourceStack> context) {
-        ServerPlayer player = context.getSource().getPlayer();
-        if (player != null) {
-            int pages = IntegerArgumentType.getInteger(context, "pages");
-            CloudStorage cloudStorage = CloudStorage.of(player);
-            cloudStorage.updateTotalPages(pages);
-            sendSuccess(context, cloudStorage);
-            return 1;
-        }
-        return 0;
     }
 
     private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage) {

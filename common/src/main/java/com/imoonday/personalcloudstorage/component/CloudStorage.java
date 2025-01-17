@@ -3,6 +3,7 @@ package com.imoonday.personalcloudstorage.component;
 import com.imoonday.personalcloudstorage.client.ClientCloudStorage;
 import com.imoonday.personalcloudstorage.client.screen.menu.CloudStorageMenu;
 import com.imoonday.personalcloudstorage.network.SyncCloudStorageS2CPacket;
+import com.imoonday.personalcloudstorage.network.SyncSettingsPacket;
 import com.imoonday.personalcloudstorage.platform.Services;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -10,23 +11,29 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class CloudStorage {
 
     public static final int SLOTS_PER_ROW = 9;
     private static final int MAX_ROWS = 6;
+    protected final Map<Integer, PagedList> pages;
+    protected final CloudStorageSettings settings = new CloudStorageSettings();
     protected UUID playerUUID;
-    protected final List<PagedList> pages;
     protected int pageSize;
     protected int totalPages;
     @Nullable
@@ -39,62 +46,61 @@ public class CloudStorage {
     public CloudStorage(UUID playerUUID, int rows) {
         this.playerUUID = playerUUID;
         this.pageSize = fixRows(rows) * SLOTS_PER_ROW;
-        this.pages = new ArrayList<>();
+        this.pages = new HashMap<>();
         this.addNewPage();
     }
 
-    protected CloudStorage(UUID playerUUID, int pageSize, int totalPages, List<PagedList> pages) {
+    public int addNewPage() {
+        if (totalPages == Integer.MAX_VALUE) {
+            return totalPages - 1;
+        }
+        pages.put(totalPages, PagedList.create(totalPages, pageSize));
+        return totalPages++;
+    }
+
+    public static int fixRows(int rows) {
+        return Mth.clamp(rows, 1, MAX_ROWS);
+    }
+
+    protected CloudStorage(UUID playerUUID, int pageSize, int totalPages, Map<Integer, PagedList> pages) {
         this.playerUUID = playerUUID;
         this.pageSize = pageSize;
         this.totalPages = totalPages;
         this.pages = pages;
     }
 
+    @Nullable
+    public <T> T findFirst(Function<PagedList, T> function) {
+        return findFirstOrDefault(function, null);
+    }
+
+    public <T> T findFirstOrDefault(Function<PagedList, T> function, T defaultValue) {
+        return findFirstOrElse(function, () -> defaultValue);
+    }
+
+    public <T> T findFirstOrElse(Function<PagedList, T> function, Supplier<T> defaultValue) {
+        for (int i = 0; i < this.totalPages; i++) {
+            T result = function.apply(this.getPage(i));
+            if (result != null) {
+                return result;
+            }
+        }
+        return defaultValue.get();
+    }
+
+    public PagedList getPage(int page) {
+        if (totalPages <= 0) {
+            return PagedList.empty();
+        }
+        page = Mth.clamp(page, 0, totalPages - 1);
+        return pages.computeIfAbsent(page, i -> PagedList.create(i, this.pageSize));
+    }
+
     public void copyFrom(CloudStorage other) {
         this.pageSize = other.pageSize;
         this.totalPages = other.totalPages;
         this.pages.clear();
-        for (PagedList page : other.pages) {
-            this.pages.add(page.copy());
-        }
-    }
-
-    public boolean update(PagedSlot slot) {
-        int page = slot.getPage();
-        if (!hasPage(page)) return false;
-        PagedList pagedList = getPage(page);
-        int slotIndex = slot.getSlot();
-        if (pagedList.isValidIndex(slotIndex)) {
-            pagedList.setItem(slotIndex, slot.getItem().copy());
-            return true;
-        }
-        return false;
-    }
-
-    public boolean update(PagedList page) {
-        for (PagedList pagedList : pages) {
-            if (pagedList.getPage() == page.getPage()) {
-                pagedList.setSize(page.getSize());
-                for (int i = 0; i < page.size(); i++) {
-                    pagedList.setItem(i, page.get(i).getItem().copy());
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void update(CloudStorage other) {
-        other.pages.forEach(this::update);
-    }
-
-    @Nullable
-    public Component getPlayerName() {
-        return playerName;
-    }
-
-    public void setPlayerName(@Nullable Component playerName) {
-        this.playerName = playerName;
+        other.pages.forEach((key, value) -> this.pages.put(key, value.copy()));
     }
 
     public void setPlayerNameIfAbsent(@Nullable Component playerName) {
@@ -103,23 +109,9 @@ public class CloudStorage {
         }
     }
 
-    /**
-     * Should call this method after modifying {@link #pageSize} or {@link #totalPages} on server
-     */
-    public void syncToClient(Player player) {
+    public void syncSettings(@Nullable Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            Services.PLATFORM.sendToPlayer(serverPlayer, new SyncCloudStorageS2CPacket(this));
-            MinecraftServer server = serverPlayer.getServer();
-            if (server != null) {
-                List<ServerPlayer> players = server.getPlayerList().getPlayers();
-                for (ServerPlayer otherPlayer : players) {
-                    AbstractContainerMenu menu = otherPlayer.containerMenu;
-                    if (menu instanceof CloudStorageMenu cloudStorageMenu && cloudStorageMenu.getCloudStorage() == this) {
-                        Services.PLATFORM.sendToPlayer(otherPlayer, new SyncCloudStorageS2CPacket(this));
-                        cloudStorageMenu.updateSlots();
-                    }
-                }
-            }
+            Services.PLATFORM.sendToPlayer(serverPlayer, new SyncSettingsPacket(this.settings.save(new CompoundTag())));
         }
     }
 
@@ -130,6 +122,34 @@ public class CloudStorage {
     public void openMenu(ServerPlayer player) {
         syncToClient(player);
         player.openMenu(new SimpleMenuProvider((i, inventory, player1) -> new CloudStorageMenu(i, inventory, this), getMenuTitle(player)));
+    }
+
+    public void syncToClient(Player player) {
+        syncToClient(player, true);
+    }
+
+    public void syncToClient(Player player, boolean check) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            AbstractContainerMenu menu = serverPlayer.containerMenu;
+            if (!check || !(menu instanceof CloudStorageMenu cloudStorageMenu) || cloudStorageMenu.getCloudStorage() == this) {
+                Services.PLATFORM.sendToPlayer(serverPlayer, new SyncCloudStorageS2CPacket(this));
+            }
+            MinecraftServer server = player.getServer();
+            if (server != null) {
+                syncToVisitors(server);
+            }
+        }
+    }
+
+    public void syncToVisitors(MinecraftServer server) {
+        List<ServerPlayer> players = server.getPlayerList().getPlayers();
+        for (ServerPlayer otherPlayer : players) {
+            AbstractContainerMenu menu = otherPlayer.containerMenu;
+            if (menu instanceof CloudStorageMenu cloudStorageMenu && cloudStorageMenu.getCloudStorage() == this) {
+                Services.PLATFORM.sendToPlayer(otherPlayer, new SyncCloudStorageS2CPacket(this));
+                cloudStorageMenu.updateSlots();
+            }
+        }
     }
 
     @NotNull
@@ -153,26 +173,33 @@ public class CloudStorage {
         return Component.translatable("title.personalcloudstorage.common");
     }
 
-    public static CloudStorage of(@NotNull Player player) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            return CloudStorageData.get(serverPlayer);
-        }
-        return ClientCloudStorage.getOrCreate(player.getUUID());
+    @Nullable
+    public Component getPlayerName() {
+        return playerName;
+    }
+
+    public void setPlayerName(@Nullable Component playerName) {
+        this.playerName = playerName;
     }
 
     public List<PagedSlot> getAllSlots() {
         List<PagedSlot> items = new ArrayList<>();
-        for (PagedList page : pages) {
-            items.addAll(page.getSlots());
-        }
+        forEachPage(page -> items.addAll(page.getSlots()), true);
         return items;
+    }
+
+    public void forEachPage(Consumer<PagedList> consumer, boolean createIfAbsent) {
+        for (int i = 0; i < this.totalPages; i++) {
+            PagedList page = createIfAbsent ? this.getPage(i) : this.pages.get(i);
+            if (page != null) {
+                consumer.accept(page);
+            }
+        }
     }
 
     public List<ItemStack> getAllItems() {
         List<ItemStack> items = new ArrayList<>();
-        for (PagedList page : pages) {
-            items.addAll(page.getItems());
-        }
+        forEachPage(page -> items.addAll(page.getItems()), false);
         return items;
     }
 
@@ -192,43 +219,23 @@ public class CloudStorage {
         return totalPages;
     }
 
-    public int getPageRows() {
-        return (int) Math.ceil((double) pageSize / SLOTS_PER_ROW);
-    }
-
-    /**
-     * Should call {@link #syncToClient(Player)} after calling this method.
-     */
-    public int addNewPage() {
-        if (totalPages == Integer.MAX_VALUE) {
-            return totalPages - 1;
-        }
-        pages.add(PagedList.create(totalPages, pageSize));
-        return totalPages++;
-    }
-
-    /**
-     * Should call {@link #syncToClient(Player)} after calling this method.
-     */
-    public int removeLastPage() {
+    @Nullable
+    public PagedList removeLastPage() {
         if (totalPages > 1) {
-            PagedList list = pages.get(totalPages - 1);
+            PagedList list = getPage(totalPages-- - 1);
             list.setRemoved(true);
-            pages.remove(list);
-            return totalPages-- - 1;
+            pages.remove(list.getPage());
+            return list;
         }
-        return -1;
+        return null;
     }
 
-    /**
-     * Should call {@link #syncToClient(Player)} after calling this method.
-     */
     public int removeLastPageIfEmpty() {
         if (totalPages > 1) {
-            PagedList list = pages.get(totalPages - 1);
+            PagedList list = getPage(totalPages - 1);
             if (list.isEmpty()) {
                 list.setRemoved(true);
-                pages.remove(list);
+                pages.remove(list.getPage());
                 totalPages--;
                 return 1;
             }
@@ -237,14 +244,13 @@ public class CloudStorage {
         return -1;
     }
 
-    /**
-     * Should call {@link #syncToClient(Player)} after calling this method.
-     */
-    public void updatePageSize(int rows) {
-        this.pageSize = fixRows(rows) * SLOTS_PER_ROW;
-        for (PagedList page : pages) {
-            page.setSize(this.pageSize);
+    @Nullable
+    public ServerPlayer findOnlinePlayer(@NotNull MinecraftServer server) {
+        ServerPlayer player = server.getPlayerList().getPlayer(playerUUID);
+        if (player == null && playerName != null) {
+            player = server.getPlayerList().getPlayerByName(playerName.getString());
         }
+        return player;
     }
 
     public boolean addRow() {
@@ -256,29 +262,13 @@ public class CloudStorage {
         return false;
     }
 
-    public static boolean isValidRows(int rows) {
-        return rows >= 1 && rows <= MAX_ROWS;
+    public int getPageRows() {
+        return (int) Math.ceil((double) pageSize / SLOTS_PER_ROW);
     }
 
-    public static int fixRows(int rows) {
-        if (rows < 1) {
-            rows = 1;
-        } else if (rows > MAX_ROWS) {
-            rows = MAX_ROWS;
-        }
-        return rows;
-    }
-
-    public PagedList getPage(int page) {
-        if (totalPages <= 0) {
-            return PagedList.EMPTY;
-        }
-        if (page < 0) {
-            page = 0;
-        } else if (page >= totalPages) {
-            page = totalPages - 1;
-        }
-        return pages.get(page);
+    public void updatePageSize(int rows) {
+        this.pageSize = fixRows(rows) * SLOTS_PER_ROW;
+        forEachPage(page -> page.setSize(this.pageSize), false);
     }
 
     public void updateTotalPages(int totalPages) {
@@ -288,7 +278,9 @@ public class CloudStorage {
 
         int size = this.totalPages;
         if (totalPages < size) {
-            this.pages.subList(totalPages, size).clear();
+            for (int i = totalPages; i < size; i++) {
+                pages.remove(i);
+            }
             this.totalPages = totalPages;
         } else if (totalPages > size) {
             do {
@@ -302,40 +294,41 @@ public class CloudStorage {
     }
 
     public PagedList getNextPage(PagedList page) {
-        int index = pages.indexOf(page);
-        if (index < 0) {
-            return page;
+        if (page == null || totalPages <= 0) {
+            return PagedList.empty();
         }
-        int next = (index + 1) % totalPages;
-        return pages.get(next);
+        int currentPage = page.getPage();
+        int next = currentPage + 1;
+        if (settings.cycleThroughPages) {
+            next = next % totalPages;
+        }
+        return getPage(next);
     }
 
     public PagedList getPreviousPage(PagedList page) {
-        int index = pages.indexOf(page);
-        if (index < 0) {
-            return page;
+        if (page == null || totalPages <= 0) {
+            return PagedList.empty();
         }
-        int previous = (index + totalPages - 1) % totalPages;
-        return pages.get(previous);
+        int currentPage = page.getPage();
+        int previous = currentPage - 1;
+        if (settings.cycleThroughPages) {
+            previous = (previous + totalPages) % totalPages;
+        }
+        return getPage(previous);
     }
 
     public ItemStack addItem(ItemStack item) {
-        if (item.isEmpty()) {
+        if (item == null || item.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        for (PagedList page : pages) {
-            if (page.insertItem(item).isEmpty()) {
-                return ItemStack.EMPTY;
-            }
-        }
-        return item;
+        return findFirstOrDefault(page -> page.insertItem(item).isEmpty() ? ItemStack.EMPTY : null, item);
     }
 
     public ItemStack takeItem(int page, int slot) {
         if (page < 0 || page >= totalPages || slot < 0 || slot >= pageSize) {
             return ItemStack.EMPTY;
         }
-        PagedSlot pagedSlot = pages.get(page).get(slot);
+        PagedSlot pagedSlot = getPage(page).get(slot);
         if (pagedSlot.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -346,73 +339,118 @@ public class CloudStorage {
         if (page < 0 || page >= totalPages || slot < 0 || slot >= pageSize) {
             return ItemStack.EMPTY;
         }
-        return pages.get(page).get(slot).replaceItem(item);
+        return getPage(page).get(slot).replaceItem(item);
+    }
+
+    public int removeItem(Item item, int maxCount) {
+        if (item == Items.AIR || maxCount <= 0) {
+            return 0;
+        }
+
+        int[] remainingCount = {maxCount};
+        return findFirstOrElse(page -> {
+            for (PagedSlot slot : page) {
+                if (slot != null && slot.getItem().is(item)) {
+                    ItemStack taken = slot.split(remainingCount[0]);
+                    if (!taken.isEmpty()) {
+                        int takenCount = taken.getCount();
+                        remainingCount[0] -= takenCount;
+                    }
+                    if (remainingCount[0] <= 0) {
+                        return maxCount;
+                    }
+                }
+            }
+            return null;
+        }, () -> maxCount - remainingCount[0]);
+    }
+
+    public boolean hasItem(Item item, int count) {
+        if (item == Items.AIR || count <= 0) {
+            return false;
+        }
+
+        int[] remainingCount = {count};
+        return findFirstOrDefault(page -> {
+            for (PagedSlot slot : page) {
+                if (slot != null && slot.getItem().is(item)) {
+                    remainingCount[0] -= slot.getItem().getCount();
+                    if (remainingCount[0] <= 0) {
+                        return true;
+                    }
+                }
+            }
+            return null;
+        }, false);
+    }
+
+    public void clear() {
+        forEachPage(PagedList::clear, false);
+    }
+
+    public void tick(Player player) {
+        if (player != null && !player.level().isClientSide && settings.autoDownload) {
+            Inventory inventory = player.getInventory();
+            for (int i = 0; i < inventory.getContainerSize(); i++) {
+                ItemStack stack = inventory.getItem(i);
+                if (stack.isEmpty()) continue;
+                int count = stack.getCount();
+                int maxStackSize = stack.getMaxStackSize();
+                if (count < maxStackSize) {
+                    int remaining = maxStackSize - count;
+                    stack.grow(this.removeItem(stack, remaining).getCount());
+                }
+            }
+        }
     }
 
     public ItemStack removeItem(ItemStack item, int maxCount) {
-        if (item.isEmpty() || maxCount <= 0) {
+        if (item == null || item.isEmpty() || maxCount <= 0) {
             return ItemStack.EMPTY;
         }
+
         ItemStack result = item.copyWithCount(0);
-        for (PagedList page : pages) {
+        int[] remainingCount = {maxCount};
+        return findFirstOrDefault(page -> {
             for (PagedSlot slot : page) {
-                if (slot.isSameItemSameTags(item)) {
-                    ItemStack taken = slot.split(maxCount);
+                if (slot != null && slot.isSameItemSameTags(item)) {
+                    ItemStack taken = slot.split(remainingCount[0]);
                     if (!taken.isEmpty()) {
                         int takenCount = taken.getCount();
                         result.grow(takenCount);
-                        maxCount -= takenCount;
+                        remainingCount[0] -= takenCount;
                     }
-                    if (maxCount <= 0) {
+                    if (remainingCount[0] <= 0) {
                         return result;
                     }
                 }
             }
-        }
-        return result;
+            return null;
+        }, result);
     }
 
-    public void clear() {
-        for (PagedList page : pages) {
-            page.clear();
-        }
+    public CloudStorageSettings getSettings() {
+        return settings;
     }
 
     public CompoundTag save(CompoundTag tag) {
+        if (tag == null) {
+            tag = new CompoundTag();
+        }
         tag.putUUID("playerUUID", playerUUID);
         tag.putInt("pageSize", pageSize);
         tag.putInt("totalPages", totalPages);
         ListTag pagesTag = new ListTag();
-        for (PagedList page : pages) {
-            pagesTag.add(page.save(new CompoundTag()));
-        }
+        forEachPage(page -> pagesTag.add(page.save(new CompoundTag())), false);
         tag.put("pages", pagesTag);
         if (playerName != null) {
             tag.putString("playerName", Component.Serializer.toJson(playerName));
         }
+        tag.put("settings", settings.save(new CompoundTag()));
         return tag;
     }
 
-    @Nullable
-    public static CloudStorage fromTag(@Nullable CompoundTag tag) {
-        if (tag == null) return null;
-        if (!tag.contains("playerUUID")) return null;
-        UUID playerUUID = tag.getUUID("playerUUID");
-        int pageSize = tag.getInt("pageSize");
-        int totalPages = tag.getInt("totalPages");
-        List<PagedList> pages = new ArrayList<>();
-        ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
-        for (int i = 0; i < pagesTag.size(); i++) {
-            pages.add(PagedList.fromTag(pagesTag.getCompound(i)));
-        }
-        CloudStorage storage = new CloudStorage(playerUUID, pageSize, totalPages, pages);
-        if (tag.contains("playerName")) {
-            storage.setPlayerName(Component.Serializer.fromJson(tag.getString("playerName")));
-        }
-        return storage;
-    }
-
-    public void load(@Nullable CompoundTag tag) {
+    public void load(CompoundTag tag) {
         if (tag == null) return;
         if (tag.contains("pageSize")) {
             pageSize = tag.getInt("pageSize");
@@ -424,11 +462,55 @@ public class CloudStorage {
             pages.clear();
             ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
             for (int i = 0; i < pagesTag.size(); i++) {
-                pages.add(PagedList.fromTag(pagesTag.getCompound(i)));
+                PagedList page = PagedList.fromTag(pagesTag.getCompound(i));
+                pages.put(page.getPage(), page);
             }
         }
         if (tag.contains("playerName")) {
             playerName = Component.Serializer.fromJson(tag.getString("playerName"));
         }
+        if (tag.contains("settings")) {
+            settings.load(tag.getCompound("settings"));
+        }
+    }
+
+    public void loadSettings(CompoundTag tag) {
+        if (tag != null) {
+            settings.load(tag);
+        }
+    }
+
+    public static CloudStorage of(@NotNull Player player) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            return CloudStorageData.get(serverPlayer);
+        }
+        return ClientCloudStorage.get();
+    }
+
+    public static boolean isValidRows(int rows) {
+        return rows >= 1 && rows <= MAX_ROWS;
+    }
+
+    @Nullable
+    public static CloudStorage fromTag(CompoundTag tag) {
+        if (tag == null) return null;
+        if (!tag.contains("playerUUID")) return null;
+        UUID playerUUID = tag.getUUID("playerUUID");
+        int pageSize = tag.getInt("pageSize");
+        int totalPages = tag.getInt("totalPages");
+        Map<Integer, PagedList> pages = new HashMap<>();
+        ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
+        for (int i = 0; i < pagesTag.size(); i++) {
+            PagedList page = PagedList.fromTag(pagesTag.getCompound(i));
+            pages.put(page.getPage(), page);
+        }
+        CloudStorage storage = new CloudStorage(playerUUID, pageSize, totalPages, pages);
+        if (tag.contains("playerName")) {
+            storage.setPlayerName(Component.Serializer.fromJson(tag.getString("playerName")));
+        }
+        if (tag.contains("settings")) {
+            storage.settings.load(tag.getCompound("settings"));
+        }
+        return storage;
     }
 }

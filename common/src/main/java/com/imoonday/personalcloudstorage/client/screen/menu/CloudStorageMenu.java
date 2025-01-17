@@ -2,6 +2,7 @@ package com.imoonday.personalcloudstorage.client.screen.menu;
 
 import com.imoonday.personalcloudstorage.component.CloudStorage;
 import com.imoonday.personalcloudstorage.component.PagedList;
+import com.imoonday.personalcloudstorage.component.PagedSlot;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
 import com.imoonday.personalcloudstorage.init.ModItems;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
@@ -16,6 +17,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +28,15 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     public static final int NEXT_PAGE_BUTTON_ID = 1;
     public static final int ADD_PAGE_BUTTON_ID = 2;
     public static final int REMOVE_PAGE_BUTTON_ID = 3;
+    public static final int REMOVE_PAGE_FORCED_BUTTON_ID = 4;
     private final Level level;
     private final CloudStorage cloudStorage;
     private final int containerRows;
     private final List<MutableSlot> mutableSlots = new ArrayList<>();
     private PagedList page;
     private final DataSlot currentPage = DataSlot.standalone();
+    @Nullable
+    private Runnable onDataChange;
 
     public CloudStorageMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, CloudStorage.of(playerInventory.player));
@@ -116,27 +121,50 @@ public class CloudStorageMenu extends AbstractContainerMenu {
                 }
                 return addPage(player);
             }
-            case REMOVE_PAGE_BUTTON_ID -> {
+            case REMOVE_PAGE_BUTTON_ID, REMOVE_PAGE_FORCED_BUTTON_ID -> {
                 if (disallowModification(player)) {
                     player.sendSystemMessage(Component.translatable("message.personalcloudstorage.cannot_modify"));
                     return false;
                 }
-                return removePage(player);
+                return removePage(player, id == REMOVE_PAGE_FORCED_BUTTON_ID);
             }
         }
         return super.clickMenuButton(player, id);
+    }
+
+    public void setOnDataChange(@Nullable Runnable onDataChange) {
+        this.onDataChange = onDataChange;
     }
 
     public boolean disallowModification(Player player) {
         return !(player.level().isClientSide ? ServerConfig.getClientCache() : ServerConfig.get()).modifyStorageOfOthers && !player.getUUID().equals(cloudStorage.getPlayerUUID());
     }
 
-    public boolean removePage(Player player) {
-        int result = cloudStorage.removeLastPageIfEmpty();
+    public boolean removePage(Player player, boolean forced) {
+        int result;
+        if (forced) {
+            PagedList removed = cloudStorage.removeLastPage();
+            if (removed != null) {
+                for (PagedSlot slot : removed) {
+                    if (!slot.isEmpty()) {
+                        ItemStack stack = slot.getItem().copy();
+                        if (!player.addItem(stack) || !stack.isEmpty()) {
+                            player.spawnAtLocation(stack);
+                        }
+                    }
+                }
+                result = 1;
+            } else {
+                result = -1;
+            }
+        } else {
+            result = cloudStorage.removeLastPageIfEmpty();
+        }
+
         if (result == 1) {
             if (!player.getAbilities().instabuild) {
                 ItemStack stack = new ItemStack(ModItems.PARTITION_NODE.get(), 1);
-                if (!player.addItem(stack)) {
+                if (!player.addItem(stack) || !stack.isEmpty()) {
                     player.spawnAtLocation(stack);
                 }
             }
@@ -213,6 +241,14 @@ public class CloudStorageMenu extends AbstractContainerMenu {
 
     public int getContainerRows() {
         return this.containerRows;
+    }
+
+    @Override
+    public void setData(int id, int data) {
+        super.setData(id, data);
+        if (this.onDataChange != null) {
+            this.onDataChange.run();
+        }
     }
 
     private static class MutableSlot extends Slot {

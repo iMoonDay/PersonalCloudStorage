@@ -1,10 +1,7 @@
 package com.imoonday.personalcloudstorage.fabric.network;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
-import com.imoonday.personalcloudstorage.network.OpenCloudStorageC2SRequest;
-import com.imoonday.personalcloudstorage.network.RequestSyncC2SRequest;
-import com.imoonday.personalcloudstorage.network.SyncCloudStorageS2CPacket;
-import com.imoonday.personalcloudstorage.network.SyncConfigS2CPacket;
+import com.imoonday.personalcloudstorage.network.*;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -32,6 +29,7 @@ public class FabricNetworkHandler {
         registerMessage("sync_cloud_storage", SyncCloudStorageS2CPacket.class, SyncCloudStorageS2CPacket::write, SyncCloudStorageS2CPacket::new, SyncCloudStorageS2CPacket::handle);
         registerMessage("request_sync", RequestSyncC2SRequest.class, RequestSyncC2SRequest::write, RequestSyncC2SRequest::new, RequestSyncC2SRequest::handle);
         registerMessage("sync_config", SyncConfigS2CPacket.class, SyncConfigS2CPacket::write, SyncConfigS2CPacket::new, SyncConfigS2CPacket::handle);
+        registerMessage("sync_settings", SyncSettingsPacket.class, SyncSettingsPacket::write, SyncSettingsPacket::new, SyncSettingsPacket::handle);
         PersonalCloudStorage.LOGGER.info(String.format("Initialized %s network!", PersonalCloudStorage.MOD_ID));
     }
 

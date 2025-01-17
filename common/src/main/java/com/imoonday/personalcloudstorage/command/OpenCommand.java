@@ -1,7 +1,6 @@
 package com.imoonday.personalcloudstorage.command;
 
 import com.imoonday.personalcloudstorage.component.CloudStorage;
-import com.imoonday.personalcloudstorage.component.CloudStorageData;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -10,8 +9,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-
-import java.util.UUID;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
@@ -32,19 +29,7 @@ public class OpenCommand {
         ServerPlayer player = context.getSource().getPlayer();
         if (player == null) return 0;
         String input = StringArgumentType.getString(context, "uuid_or_name");
-        CloudStorageData data = CloudStorageData.get(context.getSource().getServer());
-
-        CloudStorage cloudStorage = null;
-        try {
-            UUID uuid = UUID.fromString(input);
-            cloudStorage = data.get(uuid);
-        } catch (IllegalArgumentException ignored) {
-
-        }
-
-        if (cloudStorage == null) {
-            cloudStorage = data.byName(input);
-        }
+        CloudStorage cloudStorage = CommandHandler.findCloudStorage(context, input);
 
         if (cloudStorage != null) {
             cloudStorage.openMenu(player);

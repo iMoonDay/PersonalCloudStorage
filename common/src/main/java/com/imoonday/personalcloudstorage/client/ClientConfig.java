@@ -3,6 +3,7 @@ package com.imoonday.personalcloudstorage.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
+import com.imoonday.personalcloudstorage.client.screen.widget.CloudStorageButton;
 import com.imoonday.personalcloudstorage.platform.Services;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
@@ -20,10 +21,14 @@ public class ClientConfig {
     private static File configFile;
 
     public boolean hideButton = false;
+    public CloudStorageButton.EdgeDirection buttonEdgeDirection = CloudStorageButton.EdgeDirection.BOTTOM;
     public int buttonOffsetX = 0;
     public int buttonOffsetY = 0;
     public boolean hidePageTurnKeyName;
     public boolean hidePageTurnButton;
+    public int pageModificationButtonOffsetX = 0;
+    public int pageModificationButtonOffsetY = 0;
+
 
     public static ClientConfig get() {
         if (instance == null) {

@@ -1,6 +1,6 @@
 package com.imoonday.personalcloudstorage.fabric.client;
 
-import com.imoonday.personalcloudstorage.client.ClientUtils;
+import com.imoonday.personalcloudstorage.client.ClientHandler;
 import com.imoonday.personalcloudstorage.client.KeyBinding;
 import com.imoonday.personalcloudstorage.client.ModKeys;
 import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
@@ -20,10 +20,10 @@ public final class PersonalCloudStorageFabricClient implements ClientModInitiali
         registerKeys();
         registerMenuScreens();
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
-            ClientUtils.onClientTick(minecraft.player);
+            ClientHandler.onClientTick(minecraft.player);
         });
         ClientPlayConnectionEvents.DISCONNECT.register((listener, minecraft) -> {
-            ClientUtils.onDisconnect();
+            ClientHandler.onDisconnect();
         });
     }
 

@@ -1,6 +1,9 @@
 package com.imoonday.personalcloudstorage.network;
 
-import com.imoonday.personalcloudstorage.event.EventHandler;
+import com.imoonday.personalcloudstorage.component.CloudStorage;
+import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.platform.Services;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -24,7 +27,8 @@ public class RequestSyncC2SRequest implements NetworkPacket {
     @Override
     public void handle(@Nullable Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            EventHandler.syncToClient(serverPlayer);
+            CloudStorage.of(serverPlayer).syncToClient(serverPlayer, false);
+            Services.PLATFORM.sendToPlayer(serverPlayer, new SyncConfigS2CPacket(ServerConfig.get().save(new CompoundTag())));
         }
     }
 }

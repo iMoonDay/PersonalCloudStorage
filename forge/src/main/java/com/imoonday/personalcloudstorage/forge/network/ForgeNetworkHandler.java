@@ -28,6 +28,7 @@ public class ForgeNetworkHandler {
         SIMPLE_CHANNEL.registerMessage(1, SyncCloudStorageS2CPacket.class, SyncCloudStorageS2CPacket::write, SyncCloudStorageS2CPacket::new, ForgeNetworkHandler::handle);
         SIMPLE_CHANNEL.registerMessage(2, RequestSyncC2SRequest.class, RequestSyncC2SRequest::write, RequestSyncC2SRequest::new, ForgeNetworkHandler::handle);
         SIMPLE_CHANNEL.registerMessage(3, SyncConfigS2CPacket.class, SyncConfigS2CPacket::write, SyncConfigS2CPacket::new, ForgeNetworkHandler::handle);
+        SIMPLE_CHANNEL.registerMessage(4, SyncSettingsPacket.class, SyncSettingsPacket::write, SyncSettingsPacket::new, ForgeNetworkHandler::handle);
         PersonalCloudStorage.LOGGER.info(String.format("Initialized %s network!", PersonalCloudStorage.MOD_ID));
     }
 

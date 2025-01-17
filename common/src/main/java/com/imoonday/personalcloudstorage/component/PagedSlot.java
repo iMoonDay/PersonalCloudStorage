@@ -18,10 +18,6 @@ public class PagedSlot {
         this.slot = slot;
     }
 
-    public static PagedSlot empty(int page, int slot) {
-        return new PagedSlot(ItemStack.EMPTY, page, slot);
-    }
-
     public ItemStack getItem() {
         return item;
     }
@@ -82,6 +78,10 @@ public class PagedSlot {
         return isSameItemSameTags(item) && this.item.getCount() < this.item.getMaxStackSize();
     }
 
+    public boolean isSameItemSameTags(ItemStack item) {
+        return ItemStack.isSameItemSameTags(this.item, item);
+    }
+
     public ItemStack takeItem() {
         return replaceItem(ItemStack.EMPTY);
     }
@@ -99,15 +99,11 @@ public class PagedSlot {
         return ItemStack.isSameItem(this.item, item);
     }
 
-    public boolean isSameItemSameTags(ItemStack item) {
-        return ItemStack.isSameItemSameTags(this.item, item);
-    }
-
-    public PagedSlot copyWithItem() {
+    public PagedSlot copy() {
         return new PagedSlot(item.copy(), page, slot);
     }
 
-    public ItemStack copy() {
+    public ItemStack copyItem() {
         return item.copy();
     }
 
@@ -128,11 +124,9 @@ public class PagedSlot {
         return tag;
     }
 
-    public static PagedSlot fromTag(CompoundTag tag) {
-        int page = tag.getInt("page");
-        int slot = tag.getInt("slot");
-        ItemStack item = tag.contains("item") ? ItemStack.of(tag.getCompound("item")) : ItemStack.EMPTY;
-        return new PagedSlot(item, page, slot);
+    @Override
+    public int hashCode() {
+        return Objects.hash(hashStackAndTag(item), page, slot);
     }
 
     @Override
@@ -143,8 +137,12 @@ public class PagedSlot {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(hashStackAndTag(item), page, slot);
+    public String toString() {
+        return "PagedItem{" +
+               "item=" + item.getHoverName().getString() +
+               ", page=" + page +
+               ", slot=" + slot +
+               '}';
     }
 
     private static int hashStackAndTag(@Nullable ItemStack stack) {
@@ -157,12 +155,14 @@ public class PagedSlot {
         }
     }
 
-    @Override
-    public String toString() {
-        return "PagedItem{" +
-               "item=" + item.getHoverName().getString() +
-               ", page=" + page +
-               ", slot=" + slot +
-               '}';
+    public static PagedSlot empty(int page, int slot) {
+        return new PagedSlot(ItemStack.EMPTY, page, slot);
+    }
+
+    public static PagedSlot fromTag(CompoundTag tag) {
+        int page = tag.getInt("page");
+        int slot = tag.getInt("slot");
+        ItemStack item = tag.contains("item") ? ItemStack.of(tag.getCompound("item")) : ItemStack.EMPTY;
+        return new PagedSlot(item, page, slot);
     }
 }

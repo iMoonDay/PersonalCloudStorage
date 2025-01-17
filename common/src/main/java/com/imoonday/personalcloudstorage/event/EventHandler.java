@@ -20,4 +20,13 @@ public class EventHandler {
     public static void loadConfig() {
         ServerConfig.load();
     }
+
+    public static void onPlayerJoin(Player player) {
+        syncToClient(player);
+        CloudStorage.of(player).syncSettings(player);
+    }
+
+    public static void onPlayerTick(Player player) {
+        CloudStorage.of(player).tick(player);
+    }
 }

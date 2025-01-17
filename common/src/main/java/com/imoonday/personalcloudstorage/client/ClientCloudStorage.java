@@ -1,15 +1,18 @@
 package com.imoonday.personalcloudstorage.client;
 
 import com.imoonday.personalcloudstorage.component.CloudStorage;
-import com.imoonday.personalcloudstorage.component.PagedList;
+import com.imoonday.personalcloudstorage.network.SyncSettingsPacket;
+import com.imoonday.personalcloudstorage.platform.Services;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
 public class ClientCloudStorage extends CloudStorage {
 
-    private static ClientCloudStorage INSTANCE;
+    private static ClientCloudStorage instance;
     private boolean synced;
 
     protected ClientCloudStorage(UUID playerUUID) {
@@ -18,20 +21,33 @@ public class ClientCloudStorage extends CloudStorage {
 
     @NotNull
     public static ClientCloudStorage getOrCreate(UUID playerUUID) {
-        if (INSTANCE == null) {
-            INSTANCE = new ClientCloudStorage(playerUUID);
+        if (instance == null) {
+            instance = new ClientCloudStorage(playerUUID);
         }
-        return INSTANCE;
+        return instance;
+    }
+
+    @NotNull
+    public static ClientCloudStorage get() {
+        if (instance == null) {
+            instance = new ClientCloudStorage(ClientHandler.getOfflinePlayerUUID());
+        }
+        return instance;
+    }
+
+    @Override
+    public UUID getPlayerUUID() {
+        UUID uuid = super.getPlayerUUID();
+        if (uuid == null) {
+            uuid = ClientHandler.getOfflinePlayerUUID();
+        }
+        return uuid;
     }
 
     public void updateClient(UUID playerUUID, int pageSize, int totalPages) {
         this.playerUUID = playerUUID;
         this.pageSize = pageSize;
         this.totalPages = totalPages;
-        this.pages.clear();
-        for (int i = 0; i < totalPages; i++) {
-            this.pages.add(PagedList.create(i, pageSize));
-        }
         synced = true;
     }
 
@@ -43,5 +59,14 @@ public class ClientCloudStorage extends CloudStorage {
     @Override
     public void syncToClient(Player player) {
 
+    }
+
+    public void syncSettings() {
+        syncSettings(null);
+    }
+
+    @Override
+    public void syncSettings(@Nullable Player player) {
+        Services.PLATFORM.sendToServer(new SyncSettingsPacket(this.settings.save(new CompoundTag())));
     }
 }

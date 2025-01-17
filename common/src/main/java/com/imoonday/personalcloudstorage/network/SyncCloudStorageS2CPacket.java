@@ -1,7 +1,7 @@
 package com.imoonday.personalcloudstorage.network;
 
 import com.imoonday.personalcloudstorage.client.ClientCloudStorage;
-import com.imoonday.personalcloudstorage.client.ClientUtils;
+import com.imoonday.personalcloudstorage.client.ClientHandler;
 import com.imoonday.personalcloudstorage.component.CloudStorage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
@@ -31,7 +31,7 @@ public record SyncCloudStorageS2CPacket(UUID playerUUID, int pageSize, int total
         if (player != null && player.level().isClientSide) {
             ClientCloudStorage cloudStorage = ClientCloudStorage.getOrCreate(playerUUID);
             cloudStorage.updateClient(playerUUID, pageSize, totalPages);
-            ClientUtils.onUpdate(player, cloudStorage);
+            ClientHandler.onUpdate(player);
         }
     }
 }

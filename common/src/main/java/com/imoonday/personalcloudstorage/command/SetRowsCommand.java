@@ -34,6 +34,10 @@ public class SetRowsCommand {
 
         if (cloudStorage != null) {
             cloudStorage.updatePageSize(rows);
+            ServerPlayer onlinePlayer = cloudStorage.findOnlinePlayer(context.getSource().getServer());
+            if (onlinePlayer != null) {
+                cloudStorage.syncToClient(onlinePlayer);
+            }
             sendSuccess(context, cloudStorage);
             return 1;
         }
@@ -47,20 +51,9 @@ public class SetRowsCommand {
         int rows = IntegerArgumentType.getInteger(context, "rows");
         CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
         cloudStorage.updatePageSize(rows);
+        cloudStorage.syncToClient(targetPlayer);
         sendSuccess(context, cloudStorage);
         return 1;
-    }
-
-    private static int setRows(CommandContext<CommandSourceStack> context) {
-        ServerPlayer player = context.getSource().getPlayer();
-        if (player != null) {
-            int rows = IntegerArgumentType.getInteger(context, "rows");
-            CloudStorage cloudStorage = CloudStorage.of(player);
-            cloudStorage.updatePageSize(rows);
-            sendSuccess(context, cloudStorage);
-            return 1;
-        }
-        return 0;
     }
 
     private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage) {

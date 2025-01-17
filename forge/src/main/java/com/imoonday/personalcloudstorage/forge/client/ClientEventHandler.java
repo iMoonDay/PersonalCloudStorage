@@ -57,7 +57,7 @@ public class ClientEventHandler {
                     }
                 }
             }
-            ClientUtils.onClientTick(Minecraft.getInstance().player);
+            ClientHandler.onClientTick(Minecraft.getInstance().player);
         }
     }
 
@@ -73,6 +73,6 @@ public class ClientEventHandler {
     }
 
     private static void onDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {
-        ClientUtils.onDisconnect();
+        ClientHandler.onDisconnect();
     }
 }
