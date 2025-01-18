@@ -22,13 +22,13 @@ public class SetPagesCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> builder() {
         return literal("pages")
+                .then(argument("player", EntityArgument.player())
+                              .then(argument("pages", IntegerArgumentType.integer(1))
+                                            .executes(SetPagesCommand::setPagesWithPlayer)))
                 .then(argument("uuid_or_name", StringArgumentType.string())
                               .suggests(CommandHandler::suggestNameAndUUID)
                               .then(argument("pages", IntegerArgumentType.integer(1))
-                                            .executes(SetPagesCommand::setPagesWithUUIDOrName)))
-                .then(argument("player", EntityArgument.player())
-                              .then(argument("pages", IntegerArgumentType.integer(1))
-                                            .executes(SetPagesCommand::setPagesWithPlayer)));
+                                            .executes(SetPagesCommand::setPagesWithUUIDOrName)));
     }
 
     private static int setPagesWithUUIDOrName(CommandContext<CommandSourceStack> context) {
@@ -50,16 +50,6 @@ public class SetPagesCommand {
         return 0;
     }
 
-    private static int setPagesWithPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "player");
-        int pages = IntegerArgumentType.getInteger(context, "pages");
-        CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
-        cloudStorage.updateTotalPages(pages);
-        cloudStorage.syncToClient(targetPlayer);
-        sendSuccess(context, cloudStorage, targetPlayer);
-        return 1;
-    }
-
     private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage, @Nullable Player player) {
         int totalPages = cloudStorage.getTotalPages();
         Component component;
@@ -73,5 +63,15 @@ public class SetPagesCommand {
             component = Component.translatable("message.personalcloudstorage.set_pages_with_uuid", playerUUID, totalPages);
         }
         context.getSource().sendSuccess(() -> component, true);
+    }
+
+    private static int setPagesWithPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "player");
+        int pages = IntegerArgumentType.getInteger(context, "pages");
+        CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
+        cloudStorage.updateTotalPages(pages);
+        cloudStorage.syncToClient(targetPlayer);
+        sendSuccess(context, cloudStorage, targetPlayer);
+        return 1;
     }
 }

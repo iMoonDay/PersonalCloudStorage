@@ -31,6 +31,7 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
     private static final MutableComponent CANNOT_DELETE_TEXT = Component.translatable("message.personalcloudstorage.at_least_one");
     private final Player player;
     private final int containerRows;
+    private CloudStorageSettingsComponent settingsComponent;
     private PageButton prevPageButton;
     private PageButton nextPageButton;
     private Button addButton;
@@ -46,18 +47,68 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
     }
 
     @Override
+    public void onUpdate() {
+        CloudStorage cloudStorage = this.menu.getCloudStorage();
+        int totalPages = cloudStorage.getTotalPages();
+        CloudStorageSettings settings = cloudStorage.getSettings();
+        boolean multiPages = totalPages > 1;
+        int currentPage = this.menu.getCurrentPage();
+
+        int buttonY = calculatePageTurnButtonY();
+
+        if (this.prevPageButton != null) {
+            this.prevPageButton.setY(buttonY);
+            this.prevPageButton.visible = multiPages && (settings.cycleThroughPages || currentPage > 0);
+        }
+        if (this.nextPageButton != null) {
+            this.nextPageButton.setY(buttonY);
+            this.nextPageButton.visible = multiPages && (settings.cycleThroughPages || currentPage < totalPages - 1);
+        }
+        this.updateAddButton();
+        if (this.removeButton != null) {
+            this.removeButton.active = multiPages;
+            this.removeButton.setTooltip(Tooltip.create(multiPages ? REMOVE_PAGE_TEXT : CANNOT_DELETE_TEXT));
+        }
+    }
+
+    protected int calculatePageTurnButtonY() {
+        int buttonY = (this.height - 13) / 2;
+        if (this.settingsComponent != null) {
+            int componentBottom = this.settingsComponent.getY() + this.settingsComponent.getHeight();
+            if (buttonY - 10 < componentBottom) {
+                buttonY = componentBottom + 10;
+            }
+        }
+        return buttonY;
+    }
+
+    private void updateAddButton() {
+        if (this.addButton != null) {
+            boolean active = this.menu.checkAddAvailable(this.player, true);
+            this.addButton.active = active;
+            this.addButton.setTooltip(Tooltip.create(active ? ADD_PAGE_TEXT : CANNOT_ADD_PAGE_TEXT));
+        }
+    }
+
+    @Override
     protected void init() {
         super.init();
         boolean multiPages = this.menu.getCloudStorage().getTotalPages() > 1;
 
+        this.settingsComponent = new CloudStorageSettingsComponent(this.minecraft, this.leftPos + this.imageWidth, this.topPos + 1);
+        this.settingsComponent.addUpdateAction(this::onUpdate);
+        this.addRenderableWidget(this.settingsComponent);
+
         ClientConfig config = ClientConfig.get();
         if (!config.hidePageTurnButton) {
-            this.prevPageButton = new PageButton(this.leftPos - 23 - 5, (this.height - 13) / 2, false, button -> {
+            int buttonY = calculatePageTurnButtonY();
+
+            this.prevPageButton = new PageButton(this.leftPos - 23 - 5, buttonY, false, button -> {
                 pressButton(CloudStorageMenu.PREVIOUS_PAGE_BUTTON_ID);
             }, true);
             this.addRenderableWidget(this.prevPageButton);
 
-            this.nextPageButton = new PageButton(this.leftPos + this.imageWidth + 5, (this.height - 13) / 2, true, button -> {
+            this.nextPageButton = new PageButton(this.leftPos + this.imageWidth + 5, buttonY, true, button -> {
                 pressButton(CloudStorageMenu.NEXT_PAGE_BUTTON_ID);
             }, true);
             this.addRenderableWidget(this.nextPageButton);
@@ -79,10 +130,6 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
         }
 
         this.onUpdate();
-
-        CloudStorageSettingsComponent component = new CloudStorageSettingsComponent(this.minecraft, this.leftPos + this.imageWidth, this.topPos + 1);
-        component.addUpdateAction(this::onUpdate);
-        this.addRenderableWidget(component);
     }
 
     @Override
@@ -99,13 +146,13 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
         if (this.prevPageButton != null && this.prevPageButton.visible) {
             Component message = getMessageWithKey(ModKeys.PREVIOUS_PAGE.getKeyMapping());
             int centerX = this.prevPageButton.getX() + this.prevPageButton.getWidth() / 2;
-            int y = this.prevPageButton.getY() - MODIFICATION_BUTTON_SIZE;
+            int y = this.prevPageButton.getY() - 10;
             guiGraphics.drawCenteredString(font, message, centerX, y, 0xFFFFFF);
         }
         if (this.nextPageButton != null && this.nextPageButton.visible) {
             Component message = getMessageWithKey(ModKeys.NEXT_PAGE.getKeyMapping());
             int centerX = this.nextPageButton.getX() + this.nextPageButton.getWidth() / 2;
-            int y = this.nextPageButton.getY() - MODIFICATION_BUTTON_SIZE;
+            int y = this.nextPageButton.getY() - 10;
             guiGraphics.drawCenteredString(font, message, centerX, y, 0xFFFFFF);
         }
     }
@@ -127,6 +174,20 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (ModKeys.PREVIOUS_PAGE.matchesMouse(button)) {
+            pressButton(CloudStorageMenu.PREVIOUS_PAGE_BUTTON_ID);
+            playPageTurnSound();
+            return true;
+        } else if (ModKeys.NEXT_PAGE.matchesMouse(button)) {
+            pressButton(CloudStorageMenu.NEXT_PAGE_BUTTON_ID);
+            playPageTurnSound();
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (ModKeys.PREVIOUS_PAGE.matches(keyCode, scanCode)) {
             pressButton(CloudStorageMenu.PREVIOUS_PAGE_BUTTON_ID);
@@ -145,23 +206,9 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (ModKeys.PREVIOUS_PAGE.matchesMouse(button)) {
-            pressButton(CloudStorageMenu.PREVIOUS_PAGE_BUTTON_ID);
-            playPageTurnSound();
-            return true;
-        } else if (ModKeys.NEXT_PAGE.matchesMouse(button)) {
-            pressButton(CloudStorageMenu.NEXT_PAGE_BUTTON_ID);
-            playPageTurnSound();
-            return true;
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    private void pressButton(int buttonId) {
-        if (this.minecraft != null && this.minecraft.gameMode != null) {
-            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, buttonId);
-        }
+    protected void containerTick() {
+        super.containerTick();
+        this.updateAddButton();
     }
 
     private void playPageTurnSound() {
@@ -170,37 +217,9 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
         }
     }
 
-    @Override
-    protected void containerTick() {
-        super.containerTick();
-        this.updateAddButton();
-    }
-
-    @Override
-    public void onUpdate() {
-        CloudStorage cloudStorage = this.menu.getCloudStorage();
-        int totalPages = cloudStorage.getTotalPages();
-        CloudStorageSettings settings = cloudStorage.getSettings();
-        boolean multiPages = totalPages > 1;
-        int currentPage = this.menu.getCurrentPage();
-        if (this.prevPageButton != null) {
-            this.prevPageButton.visible = multiPages && (settings.cycleThroughPages || currentPage > 0);
-        }
-        if (this.nextPageButton != null) {
-            this.nextPageButton.visible = multiPages && (settings.cycleThroughPages || currentPage < totalPages - 1);
-        }
-        this.updateAddButton();
-        if (this.removeButton != null) {
-            this.removeButton.active = multiPages;
-            this.removeButton.setTooltip(Tooltip.create(multiPages ? REMOVE_PAGE_TEXT : CANNOT_DELETE_TEXT));
-        }
-    }
-
-    private void updateAddButton() {
-        if (this.addButton != null) {
-            boolean canAdd = this.menu.checkAddAvailable(this.player, true);
-            this.addButton.active = canAdd;
-            this.addButton.setTooltip(Tooltip.create(canAdd ? ADD_PAGE_TEXT : CANNOT_ADD_PAGE_TEXT));
+    private void pressButton(int buttonId) {
+        if (this.minecraft != null && this.minecraft.gameMode != null) {
+            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, buttonId);
         }
     }
 }

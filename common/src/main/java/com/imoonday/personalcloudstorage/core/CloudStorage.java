@@ -472,15 +472,15 @@ public class CloudStorage implements IterableWithSize<PagedList> {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(pages, settings, playerUUID, pageSize, totalPages, playerName);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof CloudStorage storage)) return false;
         return pageSize == storage.pageSize && totalPages == storage.totalPages && Objects.equals(pages, storage.pages) && Objects.equals(settings, storage.settings) && Objects.equals(playerUUID, storage.playerUUID) && Objects.equals(playerName, storage.playerName);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(pages, settings, playerUUID, pageSize, totalPages, playerName);
     }
 
     @Override

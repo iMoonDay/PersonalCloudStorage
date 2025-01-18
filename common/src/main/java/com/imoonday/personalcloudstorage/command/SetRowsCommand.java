@@ -1,5 +1,6 @@
 package com.imoonday.personalcloudstorage.command;
 
+import com.imoonday.personalcloudstorage.client.screen.menu.CloudStorageMenu;
 import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -22,13 +23,13 @@ public class SetRowsCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> builder() {
         return literal("rows")
+                .then(argument("player", EntityArgument.player())
+                              .then(argument("rows", IntegerArgumentType.integer(1, 6))
+                                            .executes(SetRowsCommand::setRowsWithPlayer)))
                 .then(argument("uuid_or_name", StringArgumentType.string())
                               .suggests(CommandHandler::suggestNameAndUUID)
                               .then(argument("rows", IntegerArgumentType.integer(1, 6))
-                                            .executes(SetRowsCommand::setRowsWithUUIDOrName)))
-                .then(argument("player", EntityArgument.player())
-                              .then(argument("rows", IntegerArgumentType.integer(1, 6))
-                                            .executes(SetRowsCommand::setRowsWithPlayer)));
+                                            .executes(SetRowsCommand::setRowsWithUUIDOrName)));
     }
 
     private static int setRowsWithUUIDOrName(CommandContext<CommandSourceStack> context) {
@@ -40,7 +41,11 @@ public class SetRowsCommand {
             cloudStorage.updatePageSize(rows);
             ServerPlayer onlinePlayer = cloudStorage.findOnlinePlayer(context.getSource().getServer());
             if (onlinePlayer != null) {
-                cloudStorage.syncToClient(onlinePlayer);
+                if (onlinePlayer.containerMenu instanceof CloudStorageMenu menu && menu.getCloudStorage() == cloudStorage) {
+                    cloudStorage.openMenu(onlinePlayer);
+                } else {
+                    cloudStorage.syncToClient(onlinePlayer);
+                }
             }
             sendSuccess(context, cloudStorage, onlinePlayer);
             return 1;
@@ -48,16 +53,6 @@ public class SetRowsCommand {
 
         context.getSource().sendFailure(Component.translatable("message.personalcloudstorage.not_found", input));
         return 0;
-    }
-
-    private static int setRowsWithPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "player");
-        int rows = IntegerArgumentType.getInteger(context, "rows");
-        CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
-        cloudStorage.updatePageSize(rows);
-        cloudStorage.syncToClient(targetPlayer);
-        sendSuccess(context, cloudStorage, targetPlayer);
-        return 1;
     }
 
     private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage, @Nullable Player player) {
@@ -73,5 +68,15 @@ public class SetRowsCommand {
             component = Component.translatable("message.personalcloudstorage.set_rows_with_uuid", playerUUID, rows);
         }
         context.getSource().sendSuccess(() -> component, true);
+    }
+
+    private static int setRowsWithPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "player");
+        int rows = IntegerArgumentType.getInteger(context, "rows");
+        CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
+        cloudStorage.updatePageSize(rows);
+        cloudStorage.syncToClient(targetPlayer);
+        sendSuccess(context, cloudStorage, targetPlayer);
+        return 1;
     }
 }

@@ -11,13 +11,6 @@ import net.minecraft.world.item.ItemStack;
 
 public class EventHandler {
 
-    public static void syncToClient(Player player) {
-        CloudStorage.of(player).syncToClient(player);
-        if (player instanceof ServerPlayer serverPlayer) {
-            Services.PLATFORM.sendToPlayer(serverPlayer, new SyncConfigS2CPacket(ServerConfig.get().save(new CompoundTag())));
-        }
-    }
-
     public static void loadConfig() {
         ServerConfig.load();
     }
@@ -25,6 +18,13 @@ public class EventHandler {
     public static void onPlayerJoin(Player player) {
         syncToClient(player);
         CloudStorage.of(player).syncSettings(player);
+    }
+
+    public static void syncToClient(Player player) {
+        CloudStorage.of(player).syncToClient(player);
+        if (player instanceof ServerPlayer serverPlayer) {
+            Services.PLATFORM.sendToPlayer(serverPlayer, new SyncConfigS2CPacket(ServerConfig.get().save(new CompoundTag())));
+        }
     }
 
     public static void onPlayerTick(Player player) {

@@ -26,13 +26,8 @@ public class CloudStorageButton extends ImageButton {
         this.offset = this.getMaxOffset();
     }
 
-    public static CloudStorageButton createForInventory(int leftPos, int topPos, int imageWidth, int imageHeight) {
-        ClientConfig config = ClientConfig.get();
-        int offsetX = config.buttonOffsetX;
-        int offsetY = config.buttonOffsetY;
-        CloudStorageButton button = new CloudStorageButton(calculateXForInventory(leftPos, imageWidth, offsetX), topPos - 16 + offsetY, config.hideButton, config.buttonEdgeDirection);
-        button.setTooltip(Tooltip.create(Component.translatable("widget.personalcloudstorage.open_button.tooltip")));
-        return button;
+    public int getMaxOffset() {
+        return animated ? Math.max(this.height - 3, 0) : 0;
     }
 
     public void updateXForInventory(int leftPos, int imageWidth) {
@@ -51,10 +46,6 @@ public class CloudStorageButton extends ImageButton {
         int y = (int) (this.getY() + this.offset);
         int height = this.getY() + this.height - y;
         this.renderTexture(guiGraphics, this.resourceLocation, this.getX(), y, this.xTexStart, this.yTexStart, this.yDiffTex, this.width, height, this.textureWidth, this.textureHeight);
-    }
-
-    public int getMaxOffset() {
-        return animated ? Math.max(this.height - 3, 0) : 0;
     }
 
     public boolean isAnimated() {
@@ -76,6 +67,15 @@ public class CloudStorageButton extends ImageButton {
             return true;
         }
         return false;
+    }
+
+    public static CloudStorageButton createForInventory(int leftPos, int topPos, int imageWidth, int imageHeight) {
+        ClientConfig config = ClientConfig.get();
+        int offsetX = config.buttonOffsetX;
+        int offsetY = config.buttonOffsetY;
+        CloudStorageButton button = new CloudStorageButton(calculateXForInventory(leftPos, imageWidth, offsetX), topPos - 16 + offsetY, config.hideButton, config.buttonEdgeDirection);
+        button.setTooltip(Tooltip.create(Component.translatable("widget.personalcloudstorage.open_button.tooltip")));
+        return button;
     }
 
     public enum EdgeDirection {

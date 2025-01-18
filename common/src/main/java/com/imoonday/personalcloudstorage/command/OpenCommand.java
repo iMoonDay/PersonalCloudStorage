@@ -16,13 +16,12 @@ import static net.minecraft.commands.Commands.literal;
 public class OpenCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> builder() {
-        return literal("open")
-                .then(argument("uuid_or_name", StringArgumentType.string())
-                              .suggests(CommandHandler::suggestNameAndUUID)
-                              .executes(OpenCommand::openWithUUIDOrName))
+        return literal("open").executes(OpenCommand::openOwnCloudStorage)
                 .then(argument("player", EntityArgument.player())
                               .executes(OpenCommand::openOtherCloudStorage))
-                .executes(OpenCommand::openOwnCloudStorage);
+                .then(argument("uuid_or_name", StringArgumentType.string())
+                              .suggests(CommandHandler::suggestNameAndUUID)
+                              .executes(OpenCommand::openWithUUIDOrName));
     }
 
     private static int openWithUUIDOrName(CommandContext<CommandSourceStack> context) {

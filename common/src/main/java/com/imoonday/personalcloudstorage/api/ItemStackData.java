@@ -6,9 +6,9 @@ import java.util.function.Supplier;
 
 public interface ItemStackData extends Supplier<ItemStack> {
 
-    void set(ItemStack stack);
-
     default void clear() {
         set(ItemStack.EMPTY);
     }
+
+    void set(ItemStack stack);
 }

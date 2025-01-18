@@ -18,6 +18,14 @@ public interface IterableWithSize<T> {
         }
     }
 
+    int size();
+
+    @NotNull
+    T get(int index);
+
+    @Nullable
+    T getUnchecked(int index);
+
     @Nullable
     default <R> R findFirst(Function<T, R> function) {
         return findFirstOrDefault(function, null);
@@ -36,12 +44,4 @@ public interface IterableWithSize<T> {
         }
         return defaultValue.get();
     }
-
-    int size();
-
-    @NotNull
-    T get(int index);
-
-    @Nullable
-    T getUnchecked(int index);
 }

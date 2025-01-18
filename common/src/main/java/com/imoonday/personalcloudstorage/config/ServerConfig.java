@@ -26,6 +26,35 @@ public class ServerConfig {
     public int maxPages = DEFAULT_MAX_PAGES;
     public boolean modifyStorageOfOthers = true;
 
+    public CompoundTag save(CompoundTag tag) {
+        tag.putInt("initialRows", initialRows);
+        tag.putInt("maxPages", maxPages);
+        tag.putBoolean("modifyStorageOfOthers", modifyStorageOfOthers);
+        return tag;
+    }
+
+    public void load(CompoundTag tag) {
+        if (tag.contains("initialRows")) {
+            initialRows = tag.getInt("initialRows");
+        }
+        if (tag.contains("maxPages")) {
+            maxPages = tag.getInt("maxPages");
+        }
+        if (tag.contains("modifyStorageOfOthers")) {
+            modifyStorageOfOthers = tag.getBoolean("modifyStorageOfOthers");
+        }
+    }
+
+    public void reset() {
+        initialRows = 3;
+        maxPages = DEFAULT_MAX_PAGES;
+        modifyStorageOfOthers = true;
+    }
+
+    public static ServerConfig get(boolean isClient) {
+        return isClient ? getClientCache() : get();
+    }
+
     public static ServerConfig get() {
         if (instance == null) {
             instance = new ServerConfig();
@@ -33,31 +62,11 @@ public class ServerConfig {
         return instance;
     }
 
-    public static ServerConfig get(boolean isClient) {
-        return isClient ? getClientCache() : get();
-    }
-
     public static ServerConfig getClientCache() {
         if (clientCache == null) {
             clientCache = new ServerConfig();
         }
         return clientCache;
-    }
-
-    private static File getConfigDir() {
-        if (configFile == null) {
-            configFile = Services.PLATFORM.getConfigDir().resolve(PersonalCloudStorage.MOD_ID + "-server.json").toFile();
-        }
-        return configFile;
-    }
-
-    public void save() {
-        File file = getConfigDir();
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write(toJson());
-        } catch (Exception e) {
-            LOGGER.error("Failed to write to config file", e);
-        }
     }
 
     public static void load() {
@@ -83,36 +92,27 @@ public class ServerConfig {
         }
     }
 
+    private static File getConfigDir() {
+        if (configFile == null) {
+            configFile = Services.PLATFORM.getConfigDir().resolve(PersonalCloudStorage.MOD_ID + "-server.json").toFile();
+        }
+        return configFile;
+    }
+
+    public void save() {
+        File file = getConfigDir();
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(toJson());
+        } catch (Exception e) {
+            LOGGER.error("Failed to write to config file", e);
+        }
+    }
+
     public String toJson() {
         return GSON.toJson(this);
     }
 
     public static ServerConfig fromJson(String json) {
         return GSON.fromJson(json, ServerConfig.class);
-    }
-
-    public CompoundTag save(CompoundTag tag) {
-        tag.putInt("initialRows", initialRows);
-        tag.putInt("maxPages", maxPages);
-        tag.putBoolean("modifyStorageOfOthers", modifyStorageOfOthers);
-        return tag;
-    }
-
-    public void load(CompoundTag tag) {
-        if (tag.contains("initialRows")) {
-            initialRows = tag.getInt("initialRows");
-        }
-        if (tag.contains("maxPages")) {
-            maxPages = tag.getInt("maxPages");
-        }
-        if (tag.contains("modifyStorageOfOthers")) {
-            modifyStorageOfOthers = tag.getBoolean("modifyStorageOfOthers");
-        }
-    }
-
-    public void reset() {
-        initialRows = 3;
-        maxPages = DEFAULT_MAX_PAGES;
-        modifyStorageOfOthers = true;
     }
 }

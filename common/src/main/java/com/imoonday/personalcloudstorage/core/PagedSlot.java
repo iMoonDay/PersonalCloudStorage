@@ -8,9 +8,9 @@ import java.util.Objects;
 
 public class PagedSlot {
 
-    private ItemStack item;
     private final int page;
     private final int slot;
+    private ItemStack item;
 
     public PagedSlot(int page, int slot) {
         this(ItemStack.EMPTY, page, slot);

@@ -33,8 +33,8 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     private final CloudStorage cloudStorage;
     private final int containerRows;
     private final List<MutableSlot> mutableSlots = new ArrayList<>();
-    private PagedList page;
     private final DataSlot currentPage = DataSlot.standalone();
+    private PagedList page;
     @Nullable
     private Runnable onUpdate;
 
@@ -76,31 +76,15 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         this.addDataSlot(currentPage).set(0);
     }
 
-    @NotNull
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        ItemStack itemStack = ItemStack.EMPTY;
-        Slot slot = this.slots.get(index);
-        if (slot.hasItem()) {
-            ItemStack itemStack2 = slot.getItem();
-            itemStack = itemStack2.copy();
-            int size = this.page.getContainerSize();
-            if (index < size) {
-                if (!this.moveItemStackTo(itemStack2, size, this.slots.size(), true)) {
-                    return ItemStack.EMPTY;
-                }
-            } else if (!this.moveItemStackTo(itemStack2, 0, size, false)) {
-                return ItemStack.EMPTY;
-            }
-
-            if (itemStack2.isEmpty()) {
-                slot.setByPlayer(ItemStack.EMPTY);
-            } else {
-                slot.setChanged();
-            }
+    public void updateSlots() {
+        page = cloudStorage.getPage(page.getPage());
+        currentPage.set(page.getPage());
+        for (MutableSlot mutableSlot : mutableSlots) {
+            mutableSlot.updateContainer(page);
         }
-
-        return itemStack;
+        if (!level.isClientSide) {
+            this.broadcastChanges();
+        }
     }
 
     @Override
@@ -132,8 +116,52 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         return super.clickMenuButton(player, id);
     }
 
-    public void setOnUpdate(@Nullable Runnable onUpdate) {
-        this.onUpdate = onUpdate;
+    @NotNull
+    @Override
+    public ItemStack quickMoveStack(Player player, int index) {
+        ItemStack itemStack = ItemStack.EMPTY;
+        Slot slot = this.slots.get(index);
+        if (slot.hasItem()) {
+            ItemStack itemStack2 = slot.getItem();
+            itemStack = itemStack2.copy();
+            int size = this.page.getContainerSize();
+            if (index < size) {
+                if (!this.moveItemStackTo(itemStack2, size, this.slots.size(), true)) {
+                    return ItemStack.EMPTY;
+                }
+            } else if (!this.moveItemStackTo(itemStack2, 0, size, false)) {
+                return ItemStack.EMPTY;
+            }
+
+            if (itemStack2.isEmpty()) {
+                slot.setByPlayer(ItemStack.EMPTY);
+            } else {
+                slot.setChanged();
+            }
+        }
+
+        return itemStack;
+    }
+
+    @Override
+    public void setItem(int slotId, int stateId, ItemStack stack) {
+        super.setItem(slotId, stateId, stack);
+        if (this.onUpdate != null) {
+            this.onUpdate.run();
+        }
+    }
+
+    @Override
+    public void setData(int id, int data) {
+        super.setData(id, data);
+        if (this.onUpdate != null) {
+            this.onUpdate.run();
+        }
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return page.stillValid(player);
     }
 
     public boolean disallowModification(Player player) {
@@ -208,19 +236,6 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         });
     }
 
-    @Override
-    public boolean stillValid(Player player) {
-        return page.stillValid(player);
-    }
-
-    public CloudStorage getCloudStorage() {
-        return cloudStorage;
-    }
-
-    public int getCurrentPage() {
-        return currentPage.get();
-    }
-
     public void nextPage() {
         page = cloudStorage.getNextPage(page);
         updateSlots();
@@ -231,35 +246,24 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         updateSlots();
     }
 
-    public void updateSlots() {
-        page = cloudStorage.getPage(page.getPage());
-        currentPage.set(page.getPage());
-        for (MutableSlot mutableSlot : mutableSlots) {
-            mutableSlot.updateContainer(page);
-        }
-        if (!level.isClientSide) {
-            this.broadcastChanges();
-        }
+    public void setOnUpdate(@Nullable Runnable onUpdate) {
+        this.onUpdate = onUpdate;
+    }
+
+    public CloudStorage getCloudStorage() {
+        return cloudStorage;
+    }
+
+    public int getCurrentPage() {
+        return currentPage.get();
+    }
+
+    public void setPageNoUpdate(int page) {
+        this.page = cloudStorage.getPage(page);
     }
 
     public int getContainerRows() {
         return this.containerRows;
-    }
-
-    @Override
-    public void setData(int id, int data) {
-        super.setData(id, data);
-        if (this.onUpdate != null) {
-            this.onUpdate.run();
-        }
-    }
-
-    @Override
-    public void setItem(int slotId, int stateId, ItemStack stack) {
-        super.setItem(slotId, stateId, stack);
-        if (this.onUpdate != null) {
-            this.onUpdate.run();
-        }
     }
 
     private static class MutableSlot extends Slot {

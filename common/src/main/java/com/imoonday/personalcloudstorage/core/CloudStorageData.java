@@ -32,35 +32,13 @@ public class CloudStorageData extends SavedData {
         return tag;
     }
 
-    public static CloudStorageData fromTag(CompoundTag tag) {
-        CloudStorageData data = new CloudStorageData();
-        for (Tag storageTag : tag.getList("CloudStorages", Tag.TAG_COMPOUND)) {
-            CloudStorage storage = CloudStorage.fromTag((CompoundTag) storageTag);
-            if (storage != null) {
-                data.cloudStorages.put(storage.getPlayerUUID(), storage);
-            }
-        }
-        return data;
-    }
-
     public Map<UUID, CloudStorage> getCloudStorages() {
         return ImmutableMap.copyOf(cloudStorages);
-    }
-
-    public static CloudStorageData get(MinecraftServer server) {
-        return server.overworld().getDataStorage().computeIfAbsent(CloudStorageData::fromTag, CloudStorageData::new, PersonalCloudStorage.MOD_ID);
     }
 
     @Nullable
     public CloudStorage get(UUID playerUUID) {
         CloudStorage storage = cloudStorages.get(playerUUID);
-        setDirty();
-        return storage;
-    }
-
-    @NotNull
-    public CloudStorage getOrCreate(UUID playerUUID) {
-        CloudStorage storage = cloudStorages.computeIfAbsent(playerUUID, uuid -> new CloudStorage(uuid, ServerConfig.get().initialRows));
         setDirty();
         return storage;
     }
@@ -81,5 +59,27 @@ public class CloudStorageData extends SavedData {
         CloudStorage cloudStorage = get(Objects.requireNonNull(player.getServer())).getOrCreate(player.getUUID());
         cloudStorage.setPlayerNameIfAbsent(player.getName());
         return cloudStorage;
+    }
+
+    public static CloudStorageData get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(CloudStorageData::fromTag, CloudStorageData::new, PersonalCloudStorage.MOD_ID);
+    }
+
+    public static CloudStorageData fromTag(CompoundTag tag) {
+        CloudStorageData data = new CloudStorageData();
+        for (Tag storageTag : tag.getList("CloudStorages", Tag.TAG_COMPOUND)) {
+            CloudStorage storage = CloudStorage.fromTag((CompoundTag) storageTag);
+            if (storage != null) {
+                data.cloudStorages.put(storage.getPlayerUUID(), storage);
+            }
+        }
+        return data;
+    }
+
+    @NotNull
+    public CloudStorage getOrCreate(UUID playerUUID) {
+        CloudStorage storage = cloudStorages.computeIfAbsent(playerUUID, uuid -> new CloudStorage(uuid, ServerConfig.get().initialRows));
+        setDirty();
+        return storage;
     }
 }

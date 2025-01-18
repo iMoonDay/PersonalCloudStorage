@@ -53,12 +53,12 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public <P extends NetworkPacket> void sendToPlayer(ServerPlayer player, P packet) {
-        FabricNetworkHandler.sendToPlayer(player, packet);
+    public <P extends NetworkPacket> void sendToAllPlayers(List<ServerPlayer> players, P packet) {
+        FabricNetworkHandler.sendToAllPlayers(players, packet);
     }
 
     @Override
-    public <P extends NetworkPacket> void sendToAllPlayers(List<ServerPlayer> players, P packet) {
-        FabricNetworkHandler.sendToAllPlayers(players, packet);
+    public <P extends NetworkPacket> void sendToPlayer(ServerPlayer player, P packet) {
+        FabricNetworkHandler.sendToPlayer(player, packet);
     }
 }

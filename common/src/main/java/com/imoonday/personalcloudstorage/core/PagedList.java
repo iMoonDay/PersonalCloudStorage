@@ -78,11 +78,6 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
     }
 
     @Override
-    public @Nullable PagedSlot getUnchecked(int index) {
-        return slots.get(index);
-    }
-
-    @Override
     public PagedSlot set(int index, @NotNull PagedSlot slot) {
         Validate.notNull(slot);
         return slots.put(index, slot);
@@ -102,6 +97,24 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
     @Override
     public void clear() {
         forEach(PagedSlot::takeItem, false);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PagedList list)) return false;
+        if (!super.equals(o)) return false;
+        return page == list.page && size == list.size && removed == list.removed && Objects.equals(slots, list.slots);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), slots, page, size, removed);
+    }
+
+    @Override
+    public @Nullable PagedSlot getUnchecked(int index) {
+        return slots.get(index);
     }
 
     public ItemStack insertItem(ItemStack item) {
@@ -143,6 +156,16 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
     @Override
     public boolean isEmpty() {
         return findFirstOrDefault(slot -> !slot.isEmpty() ? false : null, true);
+    }
+
+    @Override
+    public String toString() {
+        return "PagedList{" +
+               "page=" + page +
+               ", slots=" + slots +
+               ", size=" + size +
+               ", removed=" + removed +
+               '}';
     }
 
     public boolean isEmptyList() {
@@ -219,29 +242,6 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
 
     public boolean isValidIndex(int index) {
         return index >= 0 && index < size;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PagedList list)) return false;
-        if (!super.equals(o)) return false;
-        return page == list.page && size == list.size && removed == list.removed && Objects.equals(slots, list.slots);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), slots, page, size, removed);
-    }
-
-    @Override
-    public String toString() {
-        return "PagedList{" +
-               "page=" + page +
-               ", slots=" + slots +
-               ", size=" + size +
-               ", removed=" + removed +
-               '}';
     }
 
     public CompoundTag save(CompoundTag tag) {

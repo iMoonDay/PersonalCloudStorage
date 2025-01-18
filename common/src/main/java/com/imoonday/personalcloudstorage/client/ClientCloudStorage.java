@@ -19,6 +19,42 @@ public class ClientCloudStorage extends CloudStorage {
         super(playerUUID);
     }
 
+    public void updateClient(UUID playerUUID, int pageSize, int totalPages) {
+        this.playerUUID = playerUUID;
+        this.pageSize = pageSize;
+        this.forEach(page -> page.setSize(this.pageSize), false);
+        this.totalPages = totalPages;
+        synced = true;
+    }
+
+    public void syncSettings() {
+        syncSettings(null);
+    }
+
+    @Override
+    public void syncSettings(@Nullable Player player) {
+        Services.PLATFORM.sendToServer(new SyncSettingsPacket(this.settings.save(new CompoundTag())));
+    }
+
+    @Override
+    public boolean isSynced() {
+        return synced;
+    }
+
+    @Override
+    public void syncToClient(Player player) {
+
+    }
+
+    @Override
+    public UUID getPlayerUUID() {
+        UUID uuid = super.getPlayerUUID();
+        if (uuid == null) {
+            uuid = ClientHandler.getOfflinePlayerUUID();
+        }
+        return uuid;
+    }
+
     @NotNull
     public static ClientCloudStorage getOrCreate(UUID playerUUID) {
         if (instance == null) {
@@ -33,41 +69,5 @@ public class ClientCloudStorage extends CloudStorage {
             instance = new ClientCloudStorage(ClientHandler.getOfflinePlayerUUID());
         }
         return instance;
-    }
-
-    @Override
-    public UUID getPlayerUUID() {
-        UUID uuid = super.getPlayerUUID();
-        if (uuid == null) {
-            uuid = ClientHandler.getOfflinePlayerUUID();
-        }
-        return uuid;
-    }
-
-    public void updateClient(UUID playerUUID, int pageSize, int totalPages) {
-        this.playerUUID = playerUUID;
-        this.pageSize = pageSize;
-        this.forEach(page -> page.setSize(this.pageSize), false);
-        this.totalPages = totalPages;
-        synced = true;
-    }
-
-    @Override
-    public boolean isSynced() {
-        return synced;
-    }
-
-    @Override
-    public void syncToClient(Player player) {
-
-    }
-
-    public void syncSettings() {
-        syncSettings(null);
-    }
-
-    @Override
-    public void syncSettings(@Nullable Player player) {
-        Services.PLATFORM.sendToServer(new SyncSettingsPacket(this.settings.save(new CompoundTag())));
     }
 }

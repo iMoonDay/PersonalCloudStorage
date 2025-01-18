@@ -25,11 +25,11 @@ public interface IPlatformHelper {
 
     <P extends NetworkPacket> void sendToServer(P packet);
 
-    <P extends NetworkPacket> void sendToPlayer(ServerPlayer player, P packet);
-
     default <P extends NetworkPacket> void sendToAllPlayers(List<ServerPlayer> players, P packet) {
         for (ServerPlayer player : players) {
             sendToPlayer(player, packet);
         }
     }
+
+    <P extends NetworkPacket> void sendToPlayer(ServerPlayer player, P packet);
 }

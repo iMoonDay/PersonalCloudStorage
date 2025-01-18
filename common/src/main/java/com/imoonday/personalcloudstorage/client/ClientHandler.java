@@ -19,14 +19,14 @@ public class ClientHandler {
         Services.PLATFORM.sendToServer(new OpenCloudStorageC2SRequest());
     }
 
-    public static void requestUpdate() {
-        Services.PLATFORM.sendToServer(new RequestSyncC2SRequest());
-    }
-
     public static void onClientTick(Player player) {
         if (player != null && player.level().isClientSide && !CloudStorage.of(player).isSynced()) {
             requestUpdate();
         }
+    }
+
+    public static void requestUpdate() {
+        Services.PLATFORM.sendToServer(new RequestSyncC2SRequest());
     }
 
     public static void onUpdate(Player player) {

@@ -42,14 +42,6 @@ public class ScrollableContainer<T extends ItemStackData> implements Container, 
         }
     }
 
-    public List<T> getDisplayedData() {
-        return data.subList(scrollIndex, Math.min(scrollIndex + size, data.size()));
-    }
-
-    public List<ItemStack> getDisplayedItems() {
-        return getDisplayedData().stream().map(ItemStackData::get).collect(Collectors.toList());
-    }
-
     public List<ItemStack> getItems() {
         return data.stream().map(ItemStackData::get).collect(Collectors.toList());
     }
@@ -57,6 +49,28 @@ public class ScrollableContainer<T extends ItemStackData> implements Container, 
     public void scroll(int amount) {
         scrollIndex = Math.max(0, Math.min(scrollIndex + amount, data.size() - size));
     }
+
+    @Override
+    public void clearContent() {
+        this.data.forEach(ItemStackData::clear);
+        this.setChanged();
+    }    public List<T> getDisplayedData() {
+        return data.subList(scrollIndex, Math.min(scrollIndex + size, data.size()));
+    }
+
+    @Override
+    public void fillStackedContents(StackedContents contents) {
+        for (T t : this.data) {
+            contents.accountStack(t.get());
+        }
+    }
+
+
+
+    public List<ItemStack> getDisplayedItems() {
+        return getDisplayedData().stream().map(ItemStackData::get).collect(Collectors.toList());
+    }
+
 
     @Override
     public int getContainerSize() {
@@ -127,16 +141,5 @@ public class ScrollableContainer<T extends ItemStackData> implements Container, 
         return true;
     }
 
-    @Override
-    public void clearContent() {
-        this.data.forEach(ItemStackData::clear);
-        this.setChanged();
-    }
 
-    @Override
-    public void fillStackedContents(StackedContents contents) {
-        for (T t : this.data) {
-            contents.accountStack(t.get());
-        }
-    }
 }

@@ -58,6 +58,22 @@ public class EmptyPagedList extends PagedList {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        return o instanceof EmptyPagedList;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+
+    @Override
+    public @Nullable PagedSlot getUnchecked(int index) {
+        return null;
+    }
+
+    @Override
     public ItemStack insertItem(ItemStack item) {
         return item;
     }
@@ -70,6 +86,11 @@ public class EmptyPagedList extends PagedList {
     @Override
     public boolean isEmpty() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "EmptyPagedList";
     }
 
     @Override
@@ -138,26 +159,5 @@ public class EmptyPagedList extends PagedList {
     @Override
     public CompoundTag save(CompoundTag tag) {
         return tag;
-    }
-
-    @Override
-    public @Nullable PagedSlot getUnchecked(int index) {
-        return null;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        return o instanceof EmptyPagedList;
-    }
-
-    @Override
-    public int hashCode() {
-        return 0;
-    }
-
-    @Override
-    public String toString() {
-        return "EmptyPagedList";
     }
 }

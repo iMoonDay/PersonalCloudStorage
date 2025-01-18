@@ -29,6 +29,26 @@ public class ClientConfig {
     public int pageModificationButtonOffsetX = 0;
     public int pageModificationButtonOffsetY = 0;
 
+    public static void load() {
+        try {
+            File file = getConfigDir();
+            if (file.exists()) {
+                String json = Files.readString(Paths.get(file.toURI()));
+                ClientConfig config = fromJson(json);
+                if (config != null) {
+                    instance = config;
+                } else {
+                    LOGGER.warn("Failed to parse config file, saving current config");
+                    get().save();
+                }
+            } else {
+                LOGGER.warn("Config file does not exist, creating new one");
+                get().save();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to read from config file", e);
+        }
+    }
 
     public static ClientConfig get() {
         if (instance == null) {
@@ -50,27 +70,6 @@ public class ClientConfig {
             writer.write(toJson());
         } catch (Exception e) {
             LOGGER.error("Failed to write to config file", e);
-        }
-    }
-
-    public static void load() {
-        try {
-            File file = getConfigDir();
-            if (file.exists()) {
-                String json = Files.readString(Paths.get(file.toURI()));
-                ClientConfig config = fromJson(json);
-                if (config != null) {
-                    instance = config;
-                } else {
-                    LOGGER.warn("Failed to parse config file, saving current config");
-                    get().save();
-                }
-            } else {
-                LOGGER.warn("Config file does not exist, creating new one");
-                get().save();
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to read from config file", e);
         }
     }
 

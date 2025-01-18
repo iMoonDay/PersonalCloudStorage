@@ -32,14 +32,6 @@ public class ForgeNetworkHandler {
         PersonalCloudStorage.LOGGER.info(String.format("Initialized %s network!", PersonalCloudStorage.MOD_ID));
     }
 
-    public static <T extends NetworkPacket> void sendToPlayer(ServerPlayer playerEntity, T packet) {
-        SIMPLE_CHANNEL.sendTo(packet, playerEntity.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
-    }
-
-    public static void sendToServer(Object objectToSend) {
-        SIMPLE_CHANNEL.sendToServer(objectToSend);
-    }
-
     public static <T extends NetworkPacket> void handle(T packet, Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         if (context.getDirection().getReceptionSide().isClient()) {
@@ -48,6 +40,14 @@ public class ForgeNetworkHandler {
             context.enqueueWork(() -> packet.handle(context.getSender()));
         }
         context.setPacketHandled(true);
+    }
+
+    public static <T extends NetworkPacket> void sendToPlayer(ServerPlayer playerEntity, T packet) {
+        SIMPLE_CHANNEL.sendTo(packet, playerEntity.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+    }
+
+    public static void sendToServer(Object objectToSend) {
+        SIMPLE_CHANNEL.sendToServer(objectToSend);
     }
 
     private static class Client {

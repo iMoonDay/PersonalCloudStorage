@@ -15,7 +15,7 @@ import org.slf4j.Logger;
  * 4. 删除页面时改成返还下界合金碎片 √
  * 5. 按钮不受设置上限限制 √
  * 6. 优先访问在线玩家的存储空间
- * */
+ */
 public final class PersonalCloudStorage {
 
     public static final String MOD_ID = "personalcloudstorage";

@@ -82,7 +82,7 @@ public class ModConfigScreenFactory {
 
             serverCategory.addEntry(entryBuilder.startTextDescription(Component.translatable("config.personalcloudstorage.maxPages.tip").withStyle(ChatFormatting.RED)).setDisplayRequirement(() -> {
                 Integer integer = maxPagesEntry.getValue();
-                return integer != null && integer >= 1000000;
+                return integer != null && integer >= 100000;
             }).build());
 
             serverCategory.addEntry(maxPagesEntry);
