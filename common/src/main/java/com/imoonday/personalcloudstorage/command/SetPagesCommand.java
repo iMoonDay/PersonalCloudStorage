@@ -1,7 +1,6 @@
 package com.imoonday.personalcloudstorage.command;
 
-import com.imoonday.personalcloudstorage.component.CloudStorage;
-import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -11,6 +10,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
@@ -21,10 +24,10 @@ public class SetPagesCommand {
         return literal("pages")
                 .then(argument("uuid_or_name", StringArgumentType.string())
                               .suggests(CommandHandler::suggestNameAndUUID)
-                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.DEFAULT_MAX_PAGES))
+                              .then(argument("pages", IntegerArgumentType.integer(1))
                                             .executes(SetPagesCommand::setPagesWithUUIDOrName)))
                 .then(argument("player", EntityArgument.player())
-                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.DEFAULT_MAX_PAGES))
+                              .then(argument("pages", IntegerArgumentType.integer(1))
                                             .executes(SetPagesCommand::setPagesWithPlayer)));
     }
 
@@ -39,7 +42,7 @@ public class SetPagesCommand {
             if (onlinePlayer != null) {
                 cloudStorage.syncToClient(onlinePlayer);
             }
-            sendSuccess(context, cloudStorage);
+            sendSuccess(context, cloudStorage, onlinePlayer);
             return 1;
         }
 
@@ -53,12 +56,22 @@ public class SetPagesCommand {
         CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
         cloudStorage.updateTotalPages(pages);
         cloudStorage.syncToClient(targetPlayer);
-        sendSuccess(context, cloudStorage);
+        sendSuccess(context, cloudStorage, targetPlayer);
         return 1;
     }
 
-    private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage) {
+    private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage, @Nullable Player player) {
         int totalPages = cloudStorage.getTotalPages();
-        context.getSource().sendSuccess(() -> Component.translatable("message.personalcloudstorage.set_pages", totalPages), true);
+        Component component;
+        Component playerName = cloudStorage.getPlayerName();
+        UUID playerUUID = cloudStorage.getPlayerUUID();
+        if (player != null && player.getUUID().equals(playerUUID)) {
+            component = Component.translatable("message.personalcloudstorage.set_pages", totalPages);
+        } else if (player != null || playerName != null) {
+            component = Component.translatable("message.personalcloudstorage.set_pages_with_name", player != null ? player.getName() : playerName, totalPages);
+        } else {
+            component = Component.translatable("message.personalcloudstorage.set_pages_with_uuid", playerUUID, totalPages);
+        }
+        context.getSource().sendSuccess(() -> component, true);
     }
 }

@@ -1,6 +1,6 @@
 package com.imoonday.personalcloudstorage.client;
 
-import com.imoonday.personalcloudstorage.component.CloudStorage;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.imoonday.personalcloudstorage.network.SyncSettingsPacket;
 import com.imoonday.personalcloudstorage.platform.Services;
 import net.minecraft.nbt.CompoundTag;
@@ -47,6 +47,7 @@ public class ClientCloudStorage extends CloudStorage {
     public void updateClient(UUID playerUUID, int pageSize, int totalPages) {
         this.playerUUID = playerUUID;
         this.pageSize = pageSize;
+        this.forEach(page -> page.setSize(this.pageSize), false);
         this.totalPages = totalPages;
         synced = true;
     }

@@ -1,6 +1,6 @@
 package com.imoonday.personalcloudstorage.command;
 
-import com.imoonday.personalcloudstorage.component.CloudStorage;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -10,6 +10,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
@@ -38,7 +42,7 @@ public class SetRowsCommand {
             if (onlinePlayer != null) {
                 cloudStorage.syncToClient(onlinePlayer);
             }
-            sendSuccess(context, cloudStorage);
+            sendSuccess(context, cloudStorage, onlinePlayer);
             return 1;
         }
 
@@ -52,12 +56,22 @@ public class SetRowsCommand {
         CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
         cloudStorage.updatePageSize(rows);
         cloudStorage.syncToClient(targetPlayer);
-        sendSuccess(context, cloudStorage);
+        sendSuccess(context, cloudStorage, targetPlayer);
         return 1;
     }
 
-    private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage) {
+    private static void sendSuccess(CommandContext<CommandSourceStack> context, CloudStorage cloudStorage, @Nullable Player player) {
         int rows = cloudStorage.getPageRows();
-        context.getSource().sendSuccess(() -> Component.translatable("message.personalcloudstorage.set_rows", rows), true);
+        Component component;
+        Component playerName = cloudStorage.getPlayerName();
+        UUID playerUUID = cloudStorage.getPlayerUUID();
+        if (player != null && player.getUUID().equals(playerUUID)) {
+            component = Component.translatable("message.personalcloudstorage.set_rows", rows);
+        } else if (player != null || playerName != null) {
+            component = Component.translatable("message.personalcloudstorage.set_rows_with_name", player != null ? player.getName() : playerName, rows);
+        } else {
+            component = Component.translatable("message.personalcloudstorage.set_rows_with_uuid", playerUUID, rows);
+        }
+        context.getSource().sendSuccess(() -> component, true);
     }
 }

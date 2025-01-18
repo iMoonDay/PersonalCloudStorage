@@ -1,8 +1,8 @@
 package com.imoonday.personalcloudstorage.client;
 
 import com.imoonday.personalcloudstorage.api.CloudStorageListener;
-import com.imoonday.personalcloudstorage.component.CloudStorage;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.imoonday.personalcloudstorage.network.OpenCloudStorageC2SRequest;
 import com.imoonday.personalcloudstorage.network.RequestSyncC2SRequest;
 import com.imoonday.personalcloudstorage.platform.Services;

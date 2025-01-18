@@ -1,4 +1,4 @@
-package com.imoonday.personalcloudstorage.component;
+package com.imoonday.personalcloudstorage.core;
 
 import com.google.common.collect.ImmutableMap;
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;

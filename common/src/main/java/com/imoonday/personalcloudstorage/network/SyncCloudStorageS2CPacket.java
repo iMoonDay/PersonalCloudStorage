@@ -2,7 +2,7 @@ package com.imoonday.personalcloudstorage.network;
 
 import com.imoonday.personalcloudstorage.client.ClientCloudStorage;
 import com.imoonday.personalcloudstorage.client.ClientHandler;
-import com.imoonday.personalcloudstorage.component.CloudStorage;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;

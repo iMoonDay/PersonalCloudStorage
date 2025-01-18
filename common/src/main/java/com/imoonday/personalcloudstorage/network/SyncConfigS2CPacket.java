@@ -1,5 +1,6 @@
 package com.imoonday.personalcloudstorage.network;
 
+import com.imoonday.personalcloudstorage.client.ClientHandler;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -21,6 +22,7 @@ public record SyncConfigS2CPacket(CompoundTag tag) implements NetworkPacket {
     public void handle(@Nullable Player player) {
         if (player != null && player.level().isClientSide) {
             ServerConfig.getClientCache().load(tag);
+            ClientHandler.onUpdate(player);
         }
     }
 }

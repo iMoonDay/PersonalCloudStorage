@@ -1,4 +1,4 @@
-package com.imoonday.personalcloudstorage.component;
+package com.imoonday.personalcloudstorage.core;
 
 import com.imoonday.personalcloudstorage.api.ItemStackData;
 import net.minecraft.world.Container;

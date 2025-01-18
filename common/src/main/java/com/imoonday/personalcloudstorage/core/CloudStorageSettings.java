@@ -1,4 +1,4 @@
-package com.imoonday.personalcloudstorage.component;
+package com.imoonday.personalcloudstorage.core;
 
 import net.minecraft.nbt.CompoundTag;
 
@@ -25,5 +25,14 @@ public class CloudStorageSettings {
         if (tag.contains("cycleThroughPages")) {
             cycleThroughPages = tag.getBoolean("cycleThroughPages");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "CloudStorageSettings{" +
+               "autoDownload=" + autoDownload +
+               ", autoUpload=" + autoUpload +
+               ", cycleThroughPages=" + cycleThroughPages +
+               '}';
     }
 }

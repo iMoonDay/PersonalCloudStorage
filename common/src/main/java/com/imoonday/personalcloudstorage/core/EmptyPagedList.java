@@ -1,16 +1,18 @@
-package com.imoonday.personalcloudstorage.component;
+package com.imoonday.personalcloudstorage.core;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 public class EmptyPagedList extends PagedList {
 
     public EmptyPagedList() {
-        super(List.of(), 0, 0);
+        super(Map.of(), 0, 0);
     }
 
     @Override
@@ -34,12 +36,12 @@ public class EmptyPagedList extends PagedList {
 
     @Override
     public @NotNull PagedSlot get(int index) {
-        return PagedSlot.empty(0, index);
+        return PagedSlot.empty();
     }
 
     @Override
     public PagedSlot set(int index, @NotNull PagedSlot slot) {
-        return PagedSlot.empty(0, index);
+        return PagedSlot.empty();
     }
 
     @Override
@@ -48,7 +50,7 @@ public class EmptyPagedList extends PagedList {
 
     @Override
     public PagedSlot remove(int index) {
-        return PagedSlot.empty(0, index);
+        return PagedSlot.empty();
     }
 
     @Override
@@ -71,12 +73,12 @@ public class EmptyPagedList extends PagedList {
     }
 
     @Override
-    public int getPage() {
-        return 0;
+    public boolean isEmptyList() {
+        return true;
     }
 
     @Override
-    public int getSize() {
+    public int getPage() {
         return 0;
     }
 
@@ -119,10 +121,6 @@ public class EmptyPagedList extends PagedList {
     }
 
     @Override
-    public void setChanged() {
-    }
-
-    @Override
     public boolean stillValid(Player player) {
         return false;
     }
@@ -142,5 +140,24 @@ public class EmptyPagedList extends PagedList {
         return tag;
     }
 
+    @Override
+    public @Nullable PagedSlot getUnchecked(int index) {
+        return null;
+    }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        return o instanceof EmptyPagedList;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+
+    @Override
+    public String toString() {
+        return "EmptyPagedList";
+    }
 }

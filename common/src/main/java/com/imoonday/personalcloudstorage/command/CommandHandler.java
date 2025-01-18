@@ -1,7 +1,7 @@
 package com.imoonday.personalcloudstorage.command;
 
-import com.imoonday.personalcloudstorage.component.CloudStorage;
-import com.imoonday.personalcloudstorage.component.CloudStorageData;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
+import com.imoonday.personalcloudstorage.core.CloudStorageData;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;

@@ -7,6 +7,7 @@
     "InventoryScreenMixin"
   ],
   "mixins": [
+    "InventoryMixin",
     "PlayerListMixin",
     "PlayerMixin",
     "SlotAccessor"

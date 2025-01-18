@@ -1,7 +1,7 @@
 package com.imoonday.personalcloudstorage.item;
 
-import com.imoonday.personalcloudstorage.component.CloudStorage;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,7 +40,7 @@ public class PartitionNodeItem extends Item {
                 level.playSound(null, serverPlayer.blockPosition(), SoundEvents.SMITHING_TABLE_USE, SoundSource.PLAYERS);
                 serverPlayer.sendSystemMessage(Component.translatable(this.getDescriptionId() + ".success", cloudStorage.getTotalPages()));
             } else {
-                serverPlayer.sendSystemMessage(Component.translatable(this.getDescriptionId() + ".failure"), true);
+                serverPlayer.sendSystemMessage(Component.translatable("message.personalcloudstorage.reach_upper_limit"), true);
             }
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());

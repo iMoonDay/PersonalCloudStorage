@@ -5,8 +5,8 @@ import com.imoonday.personalcloudstorage.client.ClientConfig;
 import com.imoonday.personalcloudstorage.client.ModKeys;
 import com.imoonday.personalcloudstorage.client.screen.menu.CloudStorageMenu;
 import com.imoonday.personalcloudstorage.client.screen.widget.CloudStorageSettingsComponent;
-import com.imoonday.personalcloudstorage.component.CloudStorage;
-import com.imoonday.personalcloudstorage.component.CloudStorageSettings;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
+import com.imoonday.personalcloudstorage.core.CloudStorageSettings;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -26,12 +26,14 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
     private static final ResourceLocation CONTAINER_BACKGROUND = new ResourceLocation("textures/gui/container/generic_54.png");
     private static final int MODIFICATION_BUTTON_SIZE = 10;
     private static final MutableComponent ADD_PAGE_TEXT = Component.translatable("message.personalcloudstorage.add_page");
+    private static final MutableComponent CANNOT_ADD_PAGE_TEXT = Component.translatable("message.personalcloudstorage.cannot_add_page");
     private static final MutableComponent REMOVE_PAGE_TEXT = Component.translatable("message.personalcloudstorage.remove_page");
     private static final MutableComponent CANNOT_DELETE_TEXT = Component.translatable("message.personalcloudstorage.at_least_one");
     private final Player player;
     private final int containerRows;
     private PageButton prevPageButton;
     private PageButton nextPageButton;
+    private Button addButton;
     private Button removeButton;
 
     public CloudStorageScreen(CloudStorageMenu menu, Inventory inventory, Component title) {
@@ -40,7 +42,7 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
         this.containerRows = menu.getContainerRows();
         this.imageHeight = 114 + this.containerRows * 18;
         this.inventoryLabelY = this.imageHeight - 94;
-        this.menu.setOnDataChange(this::onUpdate);
+        this.menu.setOnUpdate(this::onUpdate);
     }
 
     @Override
@@ -63,11 +65,11 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
 
         if (!this.menu.disallowModification(this.player)) {
             int size = MODIFICATION_BUTTON_SIZE;
-            Button addButton = Button.builder(Component.literal("+"), button -> pressButton(CloudStorageMenu.ADD_PAGE_BUTTON_ID))
-                                     .bounds(this.leftPos + this.imageWidth - 7 - size + config.pageModificationButtonOffsetX, this.topPos + 5 + config.pageModificationButtonOffsetY, size, size)
-                                     .tooltip(Tooltip.create(ADD_PAGE_TEXT))
-                                     .build();
-            this.addRenderableWidget(addButton);
+            this.addButton = Button.builder(Component.literal("+"), button -> pressButton(CloudStorageMenu.ADD_PAGE_BUTTON_ID))
+                                   .bounds(this.leftPos + this.imageWidth - 7 - size + config.pageModificationButtonOffsetX, this.topPos + 5 + config.pageModificationButtonOffsetY, size, size)
+                                   .tooltip(Tooltip.create(this.menu.checkAddAvailable(this.player, true) ? ADD_PAGE_TEXT : CANNOT_ADD_PAGE_TEXT))
+                                   .build();
+            this.addRenderableWidget(this.addButton);
 
             this.removeButton = Button.builder(Component.literal("-"), button -> pressButton(hasShiftDown() ? CloudStorageMenu.REMOVE_PAGE_FORCED_BUTTON_ID : CloudStorageMenu.REMOVE_PAGE_BUTTON_ID))
                                       .bounds(addButton.getX() - 2 - size, addButton.getY(), size, size)
@@ -169,6 +171,12 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
     }
 
     @Override
+    protected void containerTick() {
+        super.containerTick();
+        this.updateAddButton();
+    }
+
+    @Override
     public void onUpdate() {
         CloudStorage cloudStorage = this.menu.getCloudStorage();
         int totalPages = cloudStorage.getTotalPages();
@@ -181,9 +189,18 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
         if (this.nextPageButton != null) {
             this.nextPageButton.visible = multiPages && (settings.cycleThroughPages || currentPage < totalPages - 1);
         }
+        this.updateAddButton();
         if (this.removeButton != null) {
             this.removeButton.active = multiPages;
             this.removeButton.setTooltip(Tooltip.create(multiPages ? REMOVE_PAGE_TEXT : CANNOT_DELETE_TEXT));
+        }
+    }
+
+    private void updateAddButton() {
+        if (this.addButton != null) {
+            boolean canAdd = this.menu.checkAddAvailable(this.player, true);
+            this.addButton.active = canAdd;
+            this.addButton.setTooltip(Tooltip.create(canAdd ? ADD_PAGE_TEXT : CANNOT_ADD_PAGE_TEXT));
         }
     }
 }

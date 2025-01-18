@@ -2,7 +2,7 @@ package com.imoonday.personalcloudstorage.client.screen.widget;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
 import com.imoonday.personalcloudstorage.client.ClientCloudStorage;
-import com.imoonday.personalcloudstorage.component.CloudStorageSettings;
+import com.imoonday.personalcloudstorage.core.CloudStorageSettings;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;

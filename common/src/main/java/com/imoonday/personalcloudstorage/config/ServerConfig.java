@@ -33,6 +33,10 @@ public class ServerConfig {
         return instance;
     }
 
+    public static ServerConfig get(boolean isClient) {
+        return isClient ? getClientCache() : get();
+    }
+
     public static ServerConfig getClientCache() {
         if (clientCache == null) {
             clientCache = new ServerConfig();

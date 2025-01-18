@@ -1,4 +1,4 @@
-package com.imoonday.personalcloudstorage.component;
+package com.imoonday.personalcloudstorage.core;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -9,8 +9,12 @@ import java.util.Objects;
 public class PagedSlot {
 
     private ItemStack item;
-    private int page;
-    private int slot;
+    private final int page;
+    private final int slot;
+
+    public PagedSlot(int page, int slot) {
+        this(ItemStack.EMPTY, page, slot);
+    }
 
     public PagedSlot(ItemStack item, int page, int slot) {
         this.item = item;
@@ -26,25 +30,16 @@ public class PagedSlot {
         return page;
     }
 
-    public void setPage(int page) {
-        this.page = page;
-    }
-
     public int getSlot() {
         return slot;
     }
 
-    public void setSlot(int slot) {
-        this.slot = slot;
-    }
-
-    public void moveTo(int page, int slot) {
-        this.setPage(page);
-        this.setSlot(slot);
-    }
-
     public boolean isEmpty() {
         return item.isEmpty();
+    }
+
+    public boolean isEmptySlot() {
+        return false;
     }
 
     public int getCount() {
@@ -138,7 +133,7 @@ public class PagedSlot {
 
     @Override
     public String toString() {
-        return "PagedItem{" +
+        return "PagedSlot{" +
                "item=" + item.getHoverName().getString() +
                ", page=" + page +
                ", slot=" + slot +
@@ -155,8 +150,8 @@ public class PagedSlot {
         }
     }
 
-    public static PagedSlot empty(int page, int slot) {
-        return new PagedSlot(ItemStack.EMPTY, page, slot);
+    public static PagedSlot empty() {
+        return new EmptyPagedSlot();
     }
 
     public static PagedSlot fromTag(CompoundTag tag) {

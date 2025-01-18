@@ -1,7 +1,7 @@
 package com.imoonday.personalcloudstorage.network;
 
-import com.imoonday.personalcloudstorage.component.CloudStorage;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.imoonday.personalcloudstorage.platform.Services;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

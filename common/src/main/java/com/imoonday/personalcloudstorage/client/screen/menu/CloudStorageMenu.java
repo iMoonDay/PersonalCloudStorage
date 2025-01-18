@@ -1,9 +1,8 @@
 package com.imoonday.personalcloudstorage.client.screen.menu;
 
-import com.imoonday.personalcloudstorage.component.CloudStorage;
-import com.imoonday.personalcloudstorage.component.PagedList;
-import com.imoonday.personalcloudstorage.component.PagedSlot;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
+import com.imoonday.personalcloudstorage.core.PagedList;
 import com.imoonday.personalcloudstorage.init.ModItems;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import com.imoonday.personalcloudstorage.mixin.SlotAccessor;
@@ -15,6 +14,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +36,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     private PagedList page;
     private final DataSlot currentPage = DataSlot.standalone();
     @Nullable
-    private Runnable onDataChange;
+    private Runnable onUpdate;
 
     public CloudStorageMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, CloudStorage.of(playerInventory.player));
@@ -132,12 +132,12 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         return super.clickMenuButton(player, id);
     }
 
-    public void setOnDataChange(@Nullable Runnable onDataChange) {
-        this.onDataChange = onDataChange;
+    public void setOnUpdate(@Nullable Runnable onUpdate) {
+        this.onUpdate = onUpdate;
     }
 
     public boolean disallowModification(Player player) {
-        return !(player.level().isClientSide ? ServerConfig.getClientCache() : ServerConfig.get()).modifyStorageOfOthers && !player.getUUID().equals(cloudStorage.getPlayerUUID());
+        return !ServerConfig.get(player.level().isClientSide).modifyStorageOfOthers && !player.getUUID().equals(cloudStorage.getPlayerUUID());
     }
 
     public boolean removePage(Player player, boolean forced) {
@@ -145,14 +145,12 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         if (forced) {
             PagedList removed = cloudStorage.removeLastPage();
             if (removed != null) {
-                for (PagedSlot slot : removed) {
+                removed.forEach(slot -> {
                     if (!slot.isEmpty()) {
                         ItemStack stack = slot.getItem().copy();
-                        if (!player.addItem(stack) || !stack.isEmpty()) {
-                            player.spawnAtLocation(stack);
-                        }
+                        player.getInventory().placeItemBackInInventory(stack);
                     }
-                }
+                }, false);
                 result = 1;
             } else {
                 result = -1;
@@ -163,10 +161,8 @@ public class CloudStorageMenu extends AbstractContainerMenu {
 
         if (result == 1) {
             if (!player.getAbilities().instabuild) {
-                ItemStack stack = new ItemStack(ModItems.PARTITION_NODE.get(), 1);
-                if (!player.addItem(stack) || !stack.isEmpty()) {
-                    player.spawnAtLocation(stack);
-                }
+                ItemStack stack = new ItemStack(Items.NETHERITE_SCRAP, 1);
+                player.getInventory().placeItemBackInInventory(stack);
             }
             cloudStorage.syncToClient(player);
             updateSlots();
@@ -180,7 +176,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     }
 
     public boolean addPage(Player player) {
-        if (checkAddAvailable(player, true)) {
+        if (checkAddAvailable(player, false)) {
             int totalPages = cloudStorage.getTotalPages();
             int newTotalPages = cloudStorage.addNewPage() + 1;
             cloudStorage.syncToClient(player);
@@ -190,13 +186,20 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         return false;
     }
 
-    public boolean checkAddAvailable(Player player, boolean shrink) {
+    public boolean checkAddAvailable(Player player, boolean simulation) {
+        int totalPages = cloudStorage.getTotalPages();
+        if (totalPages >= ServerConfig.get(player.level().isClientSide).maxPages) {
+            if (!simulation) {
+                player.sendSystemMessage(Component.translatable("message.personalcloudstorage.reach_upper_limit"));
+            }
+            return false;
+        }
         if (player.getAbilities().instabuild) {
             return true;
         }
         return player.getInventory().hasAnyMatching(stack -> {
             if (stack.is(ModItems.PARTITION_NODE.get())) {
-                if (shrink) {
+                if (!simulation) {
                     stack.shrink(1);
                 }
                 return true;
@@ -246,8 +249,16 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     @Override
     public void setData(int id, int data) {
         super.setData(id, data);
-        if (this.onDataChange != null) {
-            this.onDataChange.run();
+        if (this.onUpdate != null) {
+            this.onUpdate.run();
+        }
+    }
+
+    @Override
+    public void setItem(int slotId, int stateId, ItemStack stack) {
+        super.setItem(slotId, stateId, stack);
+        if (this.onUpdate != null) {
+            this.onUpdate.run();
         }
     }
 
