@@ -1,4 +1,5 @@
 {
+  "config.personalcloudstorage.buttonAdhesiveEdge": "Cloud Storage Button Adhesion Edge",
   "config.personalcloudstorage.buttonOffsetX": "Cloud Storage Button X Offset",
   "config.personalcloudstorage.buttonOffsetY": "Cloud Storage Button Y Offset",
   "config.personalcloudstorage.category.client": "Client",
@@ -12,6 +13,8 @@
   "config.personalcloudstorage.modifyStorageOfOthers": "Allow modification of others' cloud storage",
   "config.personalcloudstorage.pageModificationButtonOffsetX": "Page Modification Button X Offset",
   "config.personalcloudstorage.pageModificationButtonOffsetY": "Page Modification Button Y Offset",
+  "config.personalcloudstorage.settingsComponentOffsetX": "Settings Component X Offset",
+  "config.personalcloudstorage.settingsComponentOffsetY": "Settings Component Y Offset",
   "config.personalcloudstorage.title": "Personal Cloud Storage",
   "item.personalcloudstorage.cloud_core": "Cloud Core",
   "item.personalcloudstorage.cloud_core.desc": "Expand the cloud storage space by one row, up to a maximum of 6 rows",
@@ -50,7 +53,7 @@
   "title.personalcloudstorage.own": "Your Cloud Storage Space",
   "widget.personalcloudstorage.edge_direction.bottom": "Bottom Edge",
   "widget.personalcloudstorage.edge_direction.left": "Left Edge",
-  "widget.personalcloudstorage.edge_direction.none": "No Edge",
+  "widget.personalcloudstorage.edge_direction.none": "None",
   "widget.personalcloudstorage.edge_direction.right": "Right Edge",
   "widget.personalcloudstorage.edge_direction.top": "Top Edge",
   "widget.personalcloudstorage.open_button.tooltip": "Personal Cloud Storage",

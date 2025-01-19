@@ -57,8 +57,8 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
         this.removed = removed;
     }
 
-    public ItemStack replaceItem(int index, ItemStack item) {
-        return get(index).replaceItem(item);
+    public ItemStack replaceItem(int slot, ItemStack stack) {
+        return get(slot).replaceItem(stack);
     }
 
     @Override
@@ -125,8 +125,7 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
         PagedSlot[] emptySlot = {null};
         ItemStack result = findFirst(slot -> {
             if (slot.canMerge(item)) {
-                slot.merge(item);
-                if (item.isEmpty()) {
+                if (slot.merge(item).isEmpty()) {
                     return ItemStack.EMPTY;
                 }
             } else if (slot.isEmpty() && emptySlot[0] == null) {

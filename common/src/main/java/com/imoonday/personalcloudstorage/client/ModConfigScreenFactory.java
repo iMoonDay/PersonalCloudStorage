@@ -1,12 +1,15 @@
 package com.imoonday.personalcloudstorage.client;
 
+import com.imoonday.personalcloudstorage.client.screen.widget.CloudStorageButton;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.IntegerListEntry;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 public class ModConfigScreenFactory {
@@ -23,10 +26,7 @@ public class ModConfigScreenFactory {
             ConfigBuilder builder = ConfigBuilder.create()
                                                  .setParentScreen(parent)
                                                  .setTitle(Component.translatable("config.personalcloudstorage.title"))
-                                                 .setSavingRunnable(() -> {
-                                                     config.save();
-                                                     serverConfig.save();
-                                                 });
+                                                 .setSavingRunnable(ModConfigScreenFactory::save);
             builder.setGlobalized(true);
             builder.setGlobalizedExpanded(false);
             ConfigEntryBuilder entryBuilder = ConfigEntryBuilder.create();
@@ -48,6 +48,12 @@ public class ModConfigScreenFactory {
                                                 .setSaveConsumer(newValue -> config.buttonOffsetY = newValue)
                                                 .build());
 
+            clientCategory.addEntry(entryBuilder.startEnumSelector(Component.translatable("config.personalcloudstorage.buttonAdhesiveEdge"), CloudStorageButton.AdhesiveEdge.class, config.buttonAdhesiveEdge)
+                                                .setDefaultValue(CloudStorageButton.AdhesiveEdge.BOTTOM)
+                                                .setSaveConsumer(newValue -> config.buttonAdhesiveEdge = newValue)
+                                                .setEnumNameProvider(t -> ((CloudStorageButton.AdhesiveEdge) t).getDisplayName())
+                                                .build());
+
             clientCategory.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.personalcloudstorage.hidePageTurnKeyName"), config.hidePageTurnKeyName)
                                                 .setDefaultValue(false)
                                                 .setSaveConsumer(newValue -> config.hidePageTurnKeyName = newValue)
@@ -67,6 +73,16 @@ public class ModConfigScreenFactory {
                                                 .setSaveConsumer(newValue -> config.pageModificationButtonOffsetY = newValue)
                                                 .build());
 
+            clientCategory.addEntry(entryBuilder.startIntField(Component.translatable("config.personalcloudstorage.settingsComponentOffsetX"), config.settingsComponentOffsetX)
+                                                .setDefaultValue(0)
+                                                .setSaveConsumer(newValue -> config.settingsComponentOffsetX = newValue)
+                                                .build());
+
+            clientCategory.addEntry(entryBuilder.startIntField(Component.translatable("config.personalcloudstorage.settingsComponentOffsetY"), config.settingsComponentOffsetY)
+                                                .setDefaultValue(0)
+                                                .setSaveConsumer(newValue -> config.settingsComponentOffsetY = newValue)
+                                                .build());
+
             ConfigCategory serverCategory = builder.getOrCreateCategory(Component.translatable("config.personalcloudstorage.category.server"));
 
             serverCategory.addEntry(entryBuilder.startIntSlider(Component.translatable("config.personalcloudstorage.initialRows"), serverConfig.initialRows, 1, 6)
@@ -82,7 +98,7 @@ public class ModConfigScreenFactory {
 
             serverCategory.addEntry(entryBuilder.startTextDescription(Component.translatable("config.personalcloudstorage.maxPages.tip").withStyle(ChatFormatting.RED)).setDisplayRequirement(() -> {
                 Integer integer = maxPagesEntry.getValue();
-                return integer != null && integer >= 100000;
+                return integer != null && integer > ServerConfig.MAX_PAGES;
             }).build());
 
             serverCategory.addEntry(maxPagesEntry);
@@ -95,6 +111,16 @@ public class ModConfigScreenFactory {
             return builder.build();
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    private static void save() {
+        ClientConfig.get().save();
+
+        ServerConfig serverConfig = ServerConfig.get();
+        serverConfig.save();
+        if (Minecraft.getInstance().isLocalServer()) {
+            ServerConfig.getClientCache().load(serverConfig.save(new CompoundTag()));
         }
     }
 }

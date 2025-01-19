@@ -25,8 +25,8 @@ public class EmptyPagedList extends PagedList {
     }
 
     @Override
-    public ItemStack replaceItem(int index, ItemStack item) {
-        return item;
+    public ItemStack replaceItem(int slot, ItemStack stack) {
+        return stack;
     }
 
     @Override

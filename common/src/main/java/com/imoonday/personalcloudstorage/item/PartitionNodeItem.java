@@ -27,11 +27,11 @@ public class PartitionNodeItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
         ItemStack stack = player.getItemInHand(usedHand);
-        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-            CloudStorage cloudStorage = CloudStorage.of(player);
-            int originalPages = cloudStorage.getTotalPages();
-            int maxPages = ServerConfig.get().maxPages;
-            if (originalPages < maxPages) {
+        CloudStorage cloudStorage = CloudStorage.of(player);
+        int originalPages = cloudStorage.getTotalPages();
+        int maxPages = ServerConfig.get().maxPages;
+        if (originalPages < maxPages) {
+            if (player instanceof ServerPlayer serverPlayer) {
                 cloudStorage.addNewPage();
                 cloudStorage.syncToClient(serverPlayer);
                 if (!player.getAbilities().instabuild) {
@@ -39,11 +39,12 @@ public class PartitionNodeItem extends Item {
                 }
                 level.playSound(null, serverPlayer.blockPosition(), SoundEvents.SMITHING_TABLE_USE, SoundSource.PLAYERS);
                 serverPlayer.sendSystemMessage(Component.translatable(this.getDescriptionId() + ".success", cloudStorage.getTotalPages()));
-            } else {
-                serverPlayer.sendSystemMessage(Component.translatable("message.personalcloudstorage.reach_upper_limit"), true);
             }
+            return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        } else if (player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.sendSystemMessage(Component.translatable("message.personalcloudstorage.reach_upper_limit"), true);
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        return InteractionResultHolder.fail(stack);
     }
 
     @Override

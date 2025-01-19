@@ -15,7 +15,8 @@ import java.nio.file.Paths;
 
 public class ServerConfig {
 
-    public static final int DEFAULT_MAX_PAGES = 999;
+    public static final int MAX_PAGES = 1000000;
+    public static final int DEFAULT_MAX_PAGES = 1000;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static ServerConfig instance;

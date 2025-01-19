@@ -47,51 +47,51 @@ public class PagedSlot {
     }
 
     public ItemStack split(int amount) {
-        ItemStack splitItem = item.split(amount);
-        if (splitItem.isEmpty()) {
+        ItemStack itemStack = item.split(amount);
+        if (itemStack.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        return splitItem;
+        return itemStack;
     }
 
-    public ItemStack merge(ItemStack item) {
-        if (!canMerge(item)) {
-            return item;
-        }
-        int newCount = this.item.getCount() + item.getCount();
+    public ItemStack merge(ItemStack stack) {
+        int newCount = this.item.getCount() + stack.getCount();
         int maxSize = this.item.getMaxStackSize();
         if (newCount > maxSize) {
             newCount = maxSize;
         }
         int increment = newCount - this.item.getCount();
         this.item.setCount(newCount);
-        item.shrink(increment);
-        return item;
+        stack.shrink(increment);
+        if (stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        return stack;
     }
 
-    public boolean canMerge(ItemStack item) {
-        return isSameItemSameTags(item) && this.item.getCount() < this.item.getMaxStackSize();
+    public boolean canMerge(ItemStack stack) {
+        return isSameItemSameTags(stack) && this.item.getCount() < this.item.getMaxStackSize();
     }
 
-    public boolean isSameItemSameTags(ItemStack item) {
-        return ItemStack.isSameItemSameTags(this.item, item);
+    public boolean isSameItemSameTags(ItemStack stack) {
+        return ItemStack.isSameItemSameTags(this.item, stack);
     }
 
     public ItemStack takeItem() {
         return replaceItem(ItemStack.EMPTY);
     }
 
-    public ItemStack replaceItem(ItemStack item) {
+    public ItemStack replaceItem(ItemStack stack) {
         ItemStack oldItem = this.item;
-        this.item = item;
+        this.item = stack;
         if (oldItem.isEmpty()) {
             return ItemStack.EMPTY;
         }
         return oldItem;
     }
 
-    public boolean isSameItem(ItemStack item) {
-        return ItemStack.isSameItem(this.item, item);
+    public boolean isSameItem(ItemStack stack) {
+        return ItemStack.isSameItem(this.item, stack);
     }
 
     public PagedSlot copy() {

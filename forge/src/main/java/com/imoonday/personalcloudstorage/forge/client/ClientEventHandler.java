@@ -6,10 +6,12 @@ import com.imoonday.personalcloudstorage.init.ModItems;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -32,6 +34,7 @@ public class ClientEventHandler {
         IEventBus eventBus = MinecraftForge.EVENT_BUS;
         eventBus.addListener(ClientEventHandler::onClientTick);
         eventBus.addListener(ClientEventHandler::onDisconnect);
+        eventBus.addListener(ClientEventHandler::onKeyPressed);
 
         if (PersonalCloudStorageClient.clothConfig) {
             ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> {
@@ -74,5 +77,15 @@ public class ClientEventHandler {
 
     private static void onDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientHandler.onDisconnect();
+    }
+
+    private static void onKeyPressed(ScreenEvent.KeyPressed.Post event) {
+        if (event.getScreen() instanceof EffectRenderingInventoryScreen<?>) {
+            int keyCode = event.getKeyCode();
+            int scanCode = event.getScanCode();
+            if (ModKeys.OPEN_CLOUD_STORAGE_INVENTORY.matches(keyCode, scanCode)) {
+                ClientHandler.openCloudStorage();
+            }
+        }
     }
 }

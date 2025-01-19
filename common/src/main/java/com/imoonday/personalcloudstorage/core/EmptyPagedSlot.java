@@ -35,17 +35,17 @@ public class EmptyPagedSlot extends PagedSlot {
     }
 
     @Override
-    public ItemStack merge(ItemStack item) {
+    public ItemStack merge(ItemStack stack) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canMerge(ItemStack item) {
+    public boolean canMerge(ItemStack stack) {
         return false;
     }
 
     @Override
-    public boolean isSameItemSameTags(ItemStack item) {
+    public boolean isSameItemSameTags(ItemStack stack) {
         return false;
     }
 
@@ -55,12 +55,12 @@ public class EmptyPagedSlot extends PagedSlot {
     }
 
     @Override
-    public ItemStack replaceItem(ItemStack item) {
+    public ItemStack replaceItem(ItemStack stack) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean isSameItem(ItemStack item) {
+    public boolean isSameItem(ItemStack stack) {
         return false;
     }
 

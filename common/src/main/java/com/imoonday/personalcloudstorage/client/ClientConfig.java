@@ -20,14 +20,16 @@ public class ClientConfig {
     private static ClientConfig instance;
     private static File configFile;
 
-    public boolean hideButton = false;
-    public CloudStorageButton.EdgeDirection buttonEdgeDirection = CloudStorageButton.EdgeDirection.BOTTOM;
-    public int buttonOffsetX = 0;
-    public int buttonOffsetY = 0;
+    public boolean hideButton;
+    public int buttonOffsetX;
+    public int buttonOffsetY;
+    public CloudStorageButton.AdhesiveEdge buttonAdhesiveEdge = CloudStorageButton.AdhesiveEdge.BOTTOM;
     public boolean hidePageTurnKeyName;
     public boolean hidePageTurnButton;
-    public int pageModificationButtonOffsetX = 0;
-    public int pageModificationButtonOffsetY = 0;
+    public int pageModificationButtonOffsetX;
+    public int pageModificationButtonOffsetY;
+    public int settingsComponentOffsetX;
+    public int settingsComponentOffsetY;
 
     public static void load() {
         try {

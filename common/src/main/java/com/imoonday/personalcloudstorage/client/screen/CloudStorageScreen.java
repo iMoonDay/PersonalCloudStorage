@@ -95,11 +95,12 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
         super.init();
         boolean multiPages = this.menu.getCloudStorage().getTotalPages() > 1;
 
-        this.settingsComponent = new CloudStorageSettingsComponent(this.minecraft, this.leftPos + this.imageWidth, this.topPos + 1);
+        ClientConfig config = ClientConfig.get();
+
+        this.settingsComponent = new CloudStorageSettingsComponent(this.minecraft, this.leftPos + this.imageWidth + config.settingsComponentOffsetX, this.topPos + 1 + config.settingsComponentOffsetY);
         this.settingsComponent.addUpdateAction(this::onUpdate);
         this.addRenderableWidget(this.settingsComponent);
 
-        ClientConfig config = ClientConfig.get();
         if (!config.hidePageTurnButton) {
             int buttonY = calculatePageTurnButtonY();
 

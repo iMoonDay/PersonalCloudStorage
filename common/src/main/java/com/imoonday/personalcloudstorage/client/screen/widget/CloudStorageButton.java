@@ -20,8 +20,8 @@ public class CloudStorageButton extends ImageButton {
     private boolean animated;
     private float offset;
 
-    public CloudStorageButton(int x, int y, boolean animated, EdgeDirection edgeDirection) {
-        super(x, y, 20 + edgeDirection.getWidthOffset(), 18 + edgeDirection.getHeightOffset(), edgeDirection.getUOffset(), edgeDirection.getVOffset(), 19, TEXTURE, button -> ClientHandler.openCloudStorage());
+    public CloudStorageButton(int x, int y, boolean animated, AdhesiveEdge adhesiveEdge) {
+        super(x, y, 20 + adhesiveEdge.getWidthOffset(), 18 + adhesiveEdge.getHeightOffset(), adhesiveEdge.getUOffset(), adhesiveEdge.getVOffset(), 19, TEXTURE, button -> ClientHandler.openCloudStorage());
         this.animated = animated;
         this.offset = this.getMaxOffset();
     }
@@ -73,12 +73,12 @@ public class CloudStorageButton extends ImageButton {
         ClientConfig config = ClientConfig.get();
         int offsetX = config.buttonOffsetX;
         int offsetY = config.buttonOffsetY;
-        CloudStorageButton button = new CloudStorageButton(calculateXForInventory(leftPos, imageWidth, offsetX), topPos - 16 + offsetY, config.hideButton, config.buttonEdgeDirection);
+        CloudStorageButton button = new CloudStorageButton(calculateXForInventory(leftPos, imageWidth, offsetX), topPos - 16 + offsetY, config.hideButton, config.buttonAdhesiveEdge);
         button.setTooltip(Tooltip.create(Component.translatable("widget.personalcloudstorage.open_button.tooltip")));
         return button;
     }
 
-    public enum EdgeDirection {
+    public enum AdhesiveEdge {
 
         @SerializedName("none")
         NONE(0, 0, 0, 0),
@@ -97,7 +97,7 @@ public class CloudStorageButton extends ImageButton {
         private final int uOffset;
         private final int vOffset;
 
-        EdgeDirection(int widthOffset, int heightOffset, int uOffset, int vOffset) {
+        AdhesiveEdge(int widthOffset, int heightOffset, int uOffset, int vOffset) {
             this.widthOffset = widthOffset;
             this.heightOffset = heightOffset;
             this.uOffset = uOffset;

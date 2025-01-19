@@ -1,5 +1,6 @@
 package com.imoonday.personalcloudstorage.command;
 
+import com.imoonday.personalcloudstorage.config.ServerConfig;
 import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -23,11 +24,11 @@ public class SetPagesCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> builder() {
         return literal("pages")
                 .then(argument("player", EntityArgument.player())
-                              .then(argument("pages", IntegerArgumentType.integer(1))
+                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.MAX_PAGES))
                                             .executes(SetPagesCommand::setPagesWithPlayer)))
                 .then(argument("uuid_or_name", StringArgumentType.string())
                               .suggests(CommandHandler::suggestNameAndUUID)
-                              .then(argument("pages", IntegerArgumentType.integer(1))
+                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.MAX_PAGES))
                                             .executes(SetPagesCommand::setPagesWithUUIDOrName)));
     }
 
@@ -55,7 +56,8 @@ public class SetPagesCommand {
         Component component;
         Component playerName = cloudStorage.getPlayerName();
         UUID playerUUID = cloudStorage.getPlayerUUID();
-        if (player != null && player.getUUID().equals(playerUUID)) {
+        ServerPlayer sourcePlayer = context.getSource().getPlayer();
+        if (sourcePlayer != null && sourcePlayer.getUUID().equals(playerUUID)) {
             component = Component.translatable("message.personalcloudstorage.set_pages", totalPages);
         } else if (player != null || playerName != null) {
             component = Component.translatable("message.personalcloudstorage.set_pages_with_name", player != null ? player.getName() : playerName, totalPages);

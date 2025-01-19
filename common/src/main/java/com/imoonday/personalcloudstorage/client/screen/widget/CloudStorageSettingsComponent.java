@@ -56,7 +56,7 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
         this.maxRows = 0;
         this.maxColumns = 0;
 
-        ToggleVisibilityButton switchButton = new ToggleVisibilityButton(this.x, this.y, SWITCH_BUTTON_SIZE, SWITCH_BUTTON_SIZE, visible);
+        ToggleVisibilityButton switchButton = new ToggleVisibilityButton(this.x + 1, this.y, SWITCH_BUTTON_SIZE, SWITCH_BUTTON_SIZE, visible);
         switchButton.setTooltip(Tooltip.create(Component.translatable("widget.personalcloudstorage.settings_button.tooltip")));
         this.widgets.add(switchButton);
         this.addButton(0, 0, 0, 39, () -> settings.autoDownload, value -> settings.autoDownload = value, Component.translatable("settings.personalcloudstorage.autoDownload"));

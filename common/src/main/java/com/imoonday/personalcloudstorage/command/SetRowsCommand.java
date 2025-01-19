@@ -38,10 +38,11 @@ public class SetRowsCommand {
         CloudStorage cloudStorage = CommandHandler.findCloudStorage(context, input);
 
         if (cloudStorage != null) {
+            int originalPageSize = cloudStorage.getPageSize();
             cloudStorage.updatePageSize(rows);
             ServerPlayer onlinePlayer = cloudStorage.findOnlinePlayer(context.getSource().getServer());
             if (onlinePlayer != null) {
-                if (onlinePlayer.containerMenu instanceof CloudStorageMenu menu && menu.getCloudStorage() == cloudStorage) {
+                if (originalPageSize != cloudStorage.getPageSize() && onlinePlayer.containerMenu instanceof CloudStorageMenu menu && menu.getCloudStorage() == cloudStorage) {
                     cloudStorage.openMenu(onlinePlayer);
                 } else {
                     cloudStorage.syncToClient(onlinePlayer);
@@ -60,7 +61,8 @@ public class SetRowsCommand {
         Component component;
         Component playerName = cloudStorage.getPlayerName();
         UUID playerUUID = cloudStorage.getPlayerUUID();
-        if (player != null && player.getUUID().equals(playerUUID)) {
+        ServerPlayer sourcePlayer = context.getSource().getPlayer();
+        if (sourcePlayer != null && sourcePlayer.getUUID().equals(playerUUID)) {
             component = Component.translatable("message.personalcloudstorage.set_rows", rows);
         } else if (player != null || playerName != null) {
             component = Component.translatable("message.personalcloudstorage.set_rows_with_name", player != null ? player.getName() : playerName, rows);
@@ -74,8 +76,13 @@ public class SetRowsCommand {
         ServerPlayer targetPlayer = EntityArgument.getPlayer(context, "player");
         int rows = IntegerArgumentType.getInteger(context, "rows");
         CloudStorage cloudStorage = CloudStorage.of(targetPlayer);
+        int originalPageSize = cloudStorage.getPageSize();
         cloudStorage.updatePageSize(rows);
-        cloudStorage.syncToClient(targetPlayer);
+        if (originalPageSize != cloudStorage.getPageSize() && targetPlayer.containerMenu instanceof CloudStorageMenu menu && menu.getCloudStorage() == cloudStorage) {
+            cloudStorage.openMenu(targetPlayer);
+        } else {
+            cloudStorage.syncToClient(targetPlayer);
+        }
         sendSuccess(context, cloudStorage, targetPlayer);
         return 1;
     }
