@@ -6,6 +6,7 @@ import com.imoonday.personalcloudstorage.client.screen.menu.CloudStorageMenu;
 import com.imoonday.personalcloudstorage.network.SyncCloudStorageS2CPacket;
 import com.imoonday.personalcloudstorage.network.SyncSettingsPacket;
 import com.imoonday.personalcloudstorage.platform.Services;
+import com.mojang.logging.LogUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -23,6 +24,7 @@ import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
+import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -30,6 +32,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
 
     public static final int SLOTS_PER_ROW = 9;
     public static final int MAX_ROWS = 6;
+    private static final Logger LOGGER = LogUtils.getLogger();
     protected final Map<Integer, PagedList> pages;
     protected final CloudStorageSettings settings = new CloudStorageSettings();
     protected UUID playerUUID;
@@ -285,25 +288,25 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         return page >= 0 && page < totalPages;
     }
 
-    public PagedList getNextPage(PagedList page) {
+    public PagedList getNextPage(PagedList page, boolean cycle) {
         if (page == null || totalPages <= 0) {
             return PagedList.empty();
         }
         int currentPage = page.getPage();
         int next = currentPage + 1;
-        if (settings.cycleThroughPages) {
+        if (cycle) {
             next = next % totalPages;
         }
         return getPage(next);
     }
 
-    public PagedList getPreviousPage(PagedList page) {
+    public PagedList getPreviousPage(PagedList page, boolean cycle) {
         if (page == null || totalPages <= 0) {
             return PagedList.empty();
         }
         int currentPage = page.getPage();
         int previous = currentPage - 1;
-        if (settings.cycleThroughPages) {
+        if (cycle) {
             previous = (previous + totalPages) % totalPages;
         }
         return getPage(previous);
@@ -496,7 +499,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
                '}';
     }
 
-    public static CloudStorage of(@NotNull Player player) {
+    public static CloudStorage of(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
             return CloudStorageData.get(serverPlayer);
         }
@@ -511,22 +514,27 @@ public class CloudStorage implements IterableWithSize<PagedList> {
     public static CloudStorage fromTag(CompoundTag tag) {
         if (tag == null) return null;
         if (!tag.contains("playerUUID")) return null;
-        UUID playerUUID = tag.getUUID("playerUUID");
-        int pageSize = tag.getInt("pageSize");
-        int totalPages = tag.getInt("totalPages");
-        Map<Integer, PagedList> pages = new HashMap<>();
-        ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
-        for (int i = 0; i < pagesTag.size(); i++) {
-            PagedList page = PagedList.fromTag(pagesTag.getCompound(i));
-            pages.put(page.getPage(), page);
+        try {
+            UUID playerUUID = tag.getUUID("playerUUID");
+            int pageSize = tag.getInt("pageSize");
+            int totalPages = tag.getInt("totalPages");
+            Map<Integer, PagedList> pages = new HashMap<>();
+            ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
+            for (int i = 0; i < pagesTag.size(); i++) {
+                PagedList page = PagedList.fromTag(pagesTag.getCompound(i));
+                pages.put(page.getPage(), page);
+            }
+            CloudStorage storage = new CloudStorage(playerUUID, pageSize, totalPages, pages);
+            if (tag.contains("playerName")) {
+                storage.setPlayerName(Component.Serializer.fromJson(tag.getString("playerName")));
+            }
+            if (tag.contains("settings")) {
+                storage.settings.load(tag.getCompound("settings"));
+            }
+            return storage;
+        } catch (Throwable t) {
+            LOGGER.error("Failed to load cloud storage from tag: {}", tag, t);
+            return null;
         }
-        CloudStorage storage = new CloudStorage(playerUUID, pageSize, totalPages, pages);
-        if (tag.contains("playerName")) {
-            storage.setPlayerName(Component.Serializer.fromJson(tag.getString("playerName")));
-        }
-        if (tag.contains("settings")) {
-            storage.settings.load(tag.getCompound("settings"));
-        }
-        return storage;
     }
 }

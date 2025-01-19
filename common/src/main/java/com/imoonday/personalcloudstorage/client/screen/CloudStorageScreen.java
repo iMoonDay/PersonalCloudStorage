@@ -97,7 +97,7 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
 
         ClientConfig config = ClientConfig.get();
 
-        this.settingsComponent = new CloudStorageSettingsComponent(this.minecraft, this.leftPos + this.imageWidth + config.settingsComponentOffsetX, this.topPos + 1 + config.settingsComponentOffsetY);
+        this.settingsComponent = new CloudStorageSettingsComponent(this.minecraft, this.leftPos + this.imageWidth + config.settingsComponentOffsetX, this.topPos + 1 + config.settingsComponentOffsetY, this.menu.isOwnCloudStorage());
         this.settingsComponent.addUpdateAction(this::onUpdate);
         this.addRenderableWidget(this.settingsComponent);
 

@@ -23,13 +23,13 @@ public class SetRowsCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> builder() {
         return literal("rows")
-                .then(argument("player", EntityArgument.player())
-                              .then(argument("rows", IntegerArgumentType.integer(1, 6))
-                                            .executes(SetRowsCommand::setRowsWithPlayer)))
                 .then(argument("uuid_or_name", StringArgumentType.string())
                               .suggests(CommandHandler::suggestNameAndUUID)
                               .then(argument("rows", IntegerArgumentType.integer(1, 6))
-                                            .executes(SetRowsCommand::setRowsWithUUIDOrName)));
+                                            .executes(SetRowsCommand::setRowsWithUUIDOrName)))
+                .then(argument("player", EntityArgument.player())
+                              .then(argument("rows", IntegerArgumentType.integer(1, 6))
+                                            .executes(SetRowsCommand::setRowsWithPlayer)));
     }
 
     private static int setRowsWithUUIDOrName(CommandContext<CommandSourceStack> context) {

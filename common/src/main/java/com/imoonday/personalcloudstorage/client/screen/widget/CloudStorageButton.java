@@ -1,6 +1,5 @@
 package com.imoonday.personalcloudstorage.client.screen.widget;
 
-import com.google.gson.annotations.SerializedName;
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
 import com.imoonday.personalcloudstorage.client.ClientConfig;
 import com.imoonday.personalcloudstorage.client.ClientHandler;
@@ -20,8 +19,8 @@ public class CloudStorageButton extends ImageButton {
     private boolean animated;
     private float offset;
 
-    public CloudStorageButton(int x, int y, boolean animated, AdhesiveEdge adhesiveEdge) {
-        super(x, y, 20 + adhesiveEdge.getWidthOffset(), 18 + adhesiveEdge.getHeightOffset(), adhesiveEdge.getUOffset(), adhesiveEdge.getVOffset(), 19, TEXTURE, button -> ClientHandler.openCloudStorage());
+    public CloudStorageButton(int x, int y, boolean animated) {
+        super(x, y, 20, 16, 0, 0, 19, TEXTURE, button -> ClientHandler.openCloudStorage());
         this.animated = animated;
         this.offset = this.getMaxOffset();
     }
@@ -73,56 +72,8 @@ public class CloudStorageButton extends ImageButton {
         ClientConfig config = ClientConfig.get();
         int offsetX = config.buttonOffsetX;
         int offsetY = config.buttonOffsetY;
-        CloudStorageButton button = new CloudStorageButton(calculateXForInventory(leftPos, imageWidth, offsetX), topPos - 16 + offsetY, config.hideButton, config.buttonAdhesiveEdge);
+        CloudStorageButton button = new CloudStorageButton(calculateXForInventory(leftPos, imageWidth, offsetX), topPos - 16 + offsetY, config.hideButton);
         button.setTooltip(Tooltip.create(Component.translatable("widget.personalcloudstorage.open_button.tooltip")));
         return button;
-    }
-
-    public enum AdhesiveEdge {
-
-        @SerializedName("none")
-        NONE(0, 0, 0, 0),
-        @SerializedName("left")
-        LEFT(-2, 0, 2, 0),
-        @SerializedName("right")
-        RIGHT(-2, 0, 0, 0),
-        @SerializedName("top")
-        TOP(0, -2, 0, 2),
-        @SerializedName("bottom")
-        BOTTOM(0, -2, 0, 0);
-
-        private final Component displayName = Component.translatable("widget.personalcloudstorage.edge_direction." + name().toLowerCase());
-        private final int widthOffset;
-        private final int heightOffset;
-        private final int uOffset;
-        private final int vOffset;
-
-        AdhesiveEdge(int widthOffset, int heightOffset, int uOffset, int vOffset) {
-            this.widthOffset = widthOffset;
-            this.heightOffset = heightOffset;
-            this.uOffset = uOffset;
-            this.vOffset = vOffset;
-        }
-
-
-        public Component getDisplayName() {
-            return displayName;
-        }
-
-        public int getWidthOffset() {
-            return widthOffset;
-        }
-
-        public int getHeightOffset() {
-            return heightOffset;
-        }
-
-        public int getUOffset() {
-            return uOffset;
-        }
-
-        public int getVOffset() {
-            return vOffset;
-        }
     }
 }

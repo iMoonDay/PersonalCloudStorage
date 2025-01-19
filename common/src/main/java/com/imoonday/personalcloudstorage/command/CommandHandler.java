@@ -10,6 +10,7 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -59,17 +60,17 @@ public class CommandHandler {
     public static CloudStorage findCloudStorage(CommandContext<CommandSourceStack> context, String input) {
         CloudStorageData data = CloudStorageData.get(context.getSource().getServer());
 
-        CloudStorage cloudStorage = null;
         try {
             UUID uuid = UUID.fromString(input);
-            cloudStorage = data.get(uuid);
+            return data.get(uuid);
         } catch (IllegalArgumentException ignored) {
+            ServerPlayer player = context.getSource().getServer().getPlayerList().getPlayerByName(input);
+            if (player != null) {
+                UUID uuid = player.getUUID();
+                return data.get(uuid);
+            }
 
+            return data.byName(input);
         }
-
-        if (cloudStorage == null) {
-            cloudStorage = data.byName(input);
-        }
-        return cloudStorage;
     }
 }

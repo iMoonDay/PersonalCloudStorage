@@ -51,6 +51,7 @@ public class ClientCloudStorage extends CloudStorage {
         UUID uuid = super.getPlayerUUID();
         if (uuid == null) {
             uuid = ClientHandler.getOfflinePlayerUUID();
+            this.playerUUID = uuid;
         }
         return uuid;
     }

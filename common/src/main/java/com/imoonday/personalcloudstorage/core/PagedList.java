@@ -64,7 +64,14 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
     @Override
     public boolean add(@NotNull PagedSlot slot) {
         Validate.notNull(slot);
-        return slots.put(slot.getSlot(), slot) != null;
+        int index = slot.getPage();
+        if (index < size) {
+            this.add(index, slot);
+        } else {
+            slots.put(size, slot.withSlot(size));
+            size++;
+        }
+        return true;
     }
 
     @NotNull
@@ -80,18 +87,28 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
     @Override
     public PagedSlot set(int index, @NotNull PagedSlot slot) {
         Validate.notNull(slot);
-        return slots.put(index, slot);
+        return slots.put(index, slot.withSlot(index));
     }
 
     @Override
     public void add(int index, @NotNull PagedSlot slot) {
         Validate.notNull(slot);
-        slots.put(index, slot);
+        for (int i = slots.size() - 1; i >= index; i--) {
+            PagedSlot pagedSlot = slots.get(i);
+            if (pagedSlot != null) {
+                slots.put(i + 1, pagedSlot.withSlot(i + 1));
+                slots.remove(i);
+            }
+        }
+        slots.put(index, slot.withSlot(index));
+        size++;
     }
 
     @Override
     public PagedSlot remove(int index) {
-        return slots.remove(index);
+        PagedSlot slot = get(index);
+        slot.takeItem();
+        return slot;
     }
 
     @Override
@@ -232,7 +249,7 @@ public class PagedList extends AbstractList<PagedSlot> implements Container, Ite
 
     @Override
     public boolean stillValid(Player player) {
-        return this.size > 0 && !this.removed;
+        return this.size > 0 && !this.removed && !this.isEmptyList();
     }
 
     public ItemStack takeItem(int index) {

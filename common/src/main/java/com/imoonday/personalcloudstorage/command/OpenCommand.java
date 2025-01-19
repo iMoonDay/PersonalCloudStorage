@@ -17,11 +17,11 @@ public class OpenCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> builder() {
         return literal("open").executes(OpenCommand::openOwnCloudStorage)
-                .then(argument("player", EntityArgument.player())
-                              .executes(OpenCommand::openOtherCloudStorage))
-                .then(argument("uuid_or_name", StringArgumentType.string())
-                              .suggests(CommandHandler::suggestNameAndUUID)
-                              .executes(OpenCommand::openWithUUIDOrName));
+                              .then(argument("uuid_or_name", StringArgumentType.string())
+                                            .suggests(CommandHandler::suggestNameAndUUID)
+                                            .executes(OpenCommand::openWithUUIDOrName))
+                              .then(argument("player", EntityArgument.player())
+                                            .executes(OpenCommand::openOtherCloudStorage));
     }
 
     private static int openWithUUIDOrName(CommandContext<CommandSourceStack> context) {

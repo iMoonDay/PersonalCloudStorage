@@ -39,7 +39,9 @@ public class CloudStorageData extends SavedData {
     @Nullable
     public CloudStorage get(UUID playerUUID) {
         CloudStorage storage = cloudStorages.get(playerUUID);
-        setDirty();
+        if (storage != null) {
+            setDirty();
+        }
         return storage;
     }
 

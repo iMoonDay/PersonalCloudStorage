@@ -23,13 +23,13 @@ public class SetPagesCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> builder() {
         return literal("pages")
-                .then(argument("player", EntityArgument.player())
-                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.MAX_PAGES))
-                                            .executes(SetPagesCommand::setPagesWithPlayer)))
                 .then(argument("uuid_or_name", StringArgumentType.string())
                               .suggests(CommandHandler::suggestNameAndUUID)
                               .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.MAX_PAGES))
-                                            .executes(SetPagesCommand::setPagesWithUUIDOrName)));
+                                            .executes(SetPagesCommand::setPagesWithUUIDOrName)))
+                .then(argument("player", EntityArgument.player())
+                              .then(argument("pages", IntegerArgumentType.integer(1, ServerConfig.MAX_PAGES))
+                                            .executes(SetPagesCommand::setPagesWithPlayer)));
     }
 
     private static int setPagesWithUUIDOrName(CommandContext<CommandSourceStack> context) {

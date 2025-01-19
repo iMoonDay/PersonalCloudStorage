@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 
 public class ModMenuType {
 
+    public static final Supplier<MenuType<CloudStorageMenu>> CLOUD_STORAGE = register("cloud_storage", CloudStorageMenu::new);
+
     private static <T extends AbstractContainerMenu> Supplier<MenuType<T>> register(String name, MenuSupplier<T> supplier) {
         return Services.PLATFORM.registerMenu(name, supplier);
     }
@@ -21,9 +23,5 @@ public class ModMenuType {
     public interface MenuSupplier<T extends AbstractContainerMenu> {
 
         T create(int i, Inventory inventory);
-    }    public static final Supplier<MenuType<CloudStorageMenu>> CLOUD_STORAGE = register("cloud_storage", CloudStorageMenu::new);
-
-
-
-
+    }
 }

@@ -98,6 +98,20 @@ public class PagedSlot {
         return new PagedSlot(item.copy(), page, slot);
     }
 
+    public PagedSlot withPage(int page) {
+        if (page == this.page) {
+            return this;
+        }
+        return new PagedSlot(item, page, slot);
+    }
+
+    public PagedSlot withSlot(int slot) {
+        if (slot == this.slot) {
+            return this;
+        }
+        return new PagedSlot(item, page, slot);
+    }
+
     public ItemStack copyItem() {
         return item.copy();
     }

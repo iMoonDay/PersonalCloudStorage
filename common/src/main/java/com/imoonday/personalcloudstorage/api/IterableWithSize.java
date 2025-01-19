@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 public interface IterableWithSize<T> {
 
-    default void forEach(Consumer<T> consumer, boolean createIfAbsent) {
+    default void forEach(Consumer<@NotNull T> consumer, boolean createIfAbsent) {
         for (int i = 0; i < this.size(); i++) {
             T page = createIfAbsent ? this.get(i) : this.getUnchecked(i);
             if (page != null) {
@@ -27,15 +27,15 @@ public interface IterableWithSize<T> {
     T getUnchecked(int index);
 
     @Nullable
-    default <R> R findFirst(Function<T, R> function) {
+    default <R> R findFirst(Function<@NotNull T, R> function) {
         return findFirstOrDefault(function, null);
     }
 
-    default <R> R findFirstOrDefault(Function<T, R> function, R defaultValue) {
+    default <R> R findFirstOrDefault(Function<@NotNull T, R> function, R defaultValue) {
         return findFirstOrElse(function, () -> defaultValue);
     }
 
-    default <R> R findFirstOrElse(Function<T, R> function, Supplier<R> defaultValue) {
+    default <R> R findFirstOrElse(Function<@NotNull T, R> function, Supplier<R> defaultValue) {
         for (int i = 0; i < this.size(); i++) {
             R result = function.apply(this.get(i));
             if (result != null) {

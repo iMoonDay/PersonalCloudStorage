@@ -20,6 +20,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
+@SuppressWarnings("removal")
 @Mod(PersonalCloudStorage.MOD_ID)
 public final class PersonalCloudStorageForge {
 

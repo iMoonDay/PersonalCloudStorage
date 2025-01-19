@@ -1,6 +1,5 @@
 package com.imoonday.personalcloudstorage.client;
 
-import com.imoonday.personalcloudstorage.client.screen.widget.CloudStorageButton;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -38,22 +37,6 @@ public class ModConfigScreenFactory {
                                                 .setSaveConsumer(newValue -> config.hideButton = newValue)
                                                 .build());
 
-            clientCategory.addEntry(entryBuilder.startIntField(Component.translatable("config.personalcloudstorage.buttonOffsetX"), config.buttonOffsetX)
-                                                .setDefaultValue(0)
-                                                .setSaveConsumer(newValue -> config.buttonOffsetX = newValue)
-                                                .build());
-
-            clientCategory.addEntry(entryBuilder.startIntField(Component.translatable("config.personalcloudstorage.buttonOffsetY"), config.buttonOffsetY)
-                                                .setDefaultValue(0)
-                                                .setSaveConsumer(newValue -> config.buttonOffsetY = newValue)
-                                                .build());
-
-            clientCategory.addEntry(entryBuilder.startEnumSelector(Component.translatable("config.personalcloudstorage.buttonAdhesiveEdge"), CloudStorageButton.AdhesiveEdge.class, config.buttonAdhesiveEdge)
-                                                .setDefaultValue(CloudStorageButton.AdhesiveEdge.BOTTOM)
-                                                .setSaveConsumer(newValue -> config.buttonAdhesiveEdge = newValue)
-                                                .setEnumNameProvider(t -> ((CloudStorageButton.AdhesiveEdge) t).getDisplayName())
-                                                .build());
-
             clientCategory.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.personalcloudstorage.hidePageTurnKeyName"), config.hidePageTurnKeyName)
                                                 .setDefaultValue(false)
                                                 .setSaveConsumer(newValue -> config.hidePageTurnKeyName = newValue)
@@ -62,6 +45,16 @@ public class ModConfigScreenFactory {
             clientCategory.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.personalcloudstorage.hidePageTurnButton"), config.hidePageTurnButton)
                                                 .setDefaultValue(false)
                                                 .setSaveConsumer(newValue -> config.hidePageTurnButton = newValue)
+                                                .build());
+
+            clientCategory.addEntry(entryBuilder.startIntField(Component.translatable("config.personalcloudstorage.buttonOffsetX"), config.buttonOffsetX)
+                                                .setDefaultValue(0)
+                                                .setSaveConsumer(newValue -> config.buttonOffsetX = newValue)
+                                                .build());
+
+            clientCategory.addEntry(entryBuilder.startIntField(Component.translatable("config.personalcloudstorage.buttonOffsetY"), config.buttonOffsetY)
+                                                .setDefaultValue(0)
+                                                .setSaveConsumer(newValue -> config.buttonOffsetY = newValue)
                                                 .build());
 
             clientCategory.addEntry(entryBuilder.startIntField(Component.translatable("config.personalcloudstorage.pageModificationButtonOffsetX"), config.pageModificationButtonOffsetX)

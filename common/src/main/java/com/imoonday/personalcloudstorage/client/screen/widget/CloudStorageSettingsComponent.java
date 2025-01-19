@@ -2,6 +2,8 @@ package com.imoonday.personalcloudstorage.client.screen.widget;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
 import com.imoonday.personalcloudstorage.client.ClientCloudStorage;
+import com.imoonday.personalcloudstorage.client.ModConfigScreenFactory;
+import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
 import com.imoonday.personalcloudstorage.core.CloudStorageSettings;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -33,6 +35,7 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
     private static final int SWITCH_BUTTON_SIZE = 11;
     public static boolean visible = true;
     private final CloudStorageSettings settings = ClientCloudStorage.get().getSettings();
+    private final Minecraft minecraft;
     private final Font font;
     private final List<AbstractWidget> widgets = new ArrayList<>();
     private final List<SettingSwitchingButton> switchingButtons = new ArrayList<>();
@@ -44,14 +47,15 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
     private int width;
     private int height;
 
-    public CloudStorageSettingsComponent(Minecraft minecraft, int x, int y) {
+    public CloudStorageSettingsComponent(Minecraft minecraft, int x, int y, boolean isOwner) {
+        this.minecraft = minecraft;
         this.font = minecraft.font;
         this.x = x;
         this.y = y;
-        this.init();
+        this.init(isOwner);
     }
 
-    private void init() {
+    private void init(boolean isOwner) {
         this.widgets.clear();
         this.maxRows = 0;
         this.maxColumns = 0;
@@ -59,9 +63,14 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
         ToggleVisibilityButton switchButton = new ToggleVisibilityButton(this.x + 1, this.y, SWITCH_BUTTON_SIZE, SWITCH_BUTTON_SIZE, visible);
         switchButton.setTooltip(Tooltip.create(Component.translatable("widget.personalcloudstorage.settings_button.tooltip")));
         this.widgets.add(switchButton);
-        this.addButton(0, 0, 0, 39, () -> settings.autoDownload, value -> settings.autoDownload = value, Component.translatable("settings.personalcloudstorage.autoDownload"));
-        this.addButton(0, 1, 51, 39, () -> settings.autoUpload, value -> settings.autoUpload = value, Component.translatable("settings.personalcloudstorage.autoUpload"));
-        this.addButton(0, 2, 102, 39, () -> settings.cycleThroughPages, value -> settings.cycleThroughPages = value, Component.translatable("settings.personalcloudstorage.cycleThroughPages"));
+
+        if (isOwner) {
+            this.addButton(0, 0, 0, 39, () -> settings.autoDownload, value -> settings.autoDownload = value, Component.translatable("settings.personalcloudstorage.autoDownload"));
+            this.addButton(0, 1, 51, 39, () -> settings.autoUpload, value -> settings.autoUpload = value, Component.translatable("settings.personalcloudstorage.autoUpload"));
+            this.addButton(0, 2, 102, 39, () -> settings.cycleThroughPages, value -> settings.cycleThroughPages = value, Component.translatable("settings.personalcloudstorage.cycleThroughPages"));
+        } else {
+            this.addButton(0, 0, 102, 39, () -> settings.cycleThroughPages, value -> settings.cycleThroughPages = value, Component.translatable("settings.personalcloudstorage.cycleThroughPages"));
+        }
 
         this.width = 10 + 26 * this.maxColumns + 8;
         this.height = 20 + 26 * this.maxRows + 8;
@@ -115,7 +124,14 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
             guiGraphics.blitNineSliced(WIDGET_TEXTURE, this.x, bgY, this.width, this.height, 8, 24, 24, 0, 103);
 
             Component title = Component.translatable("settings.personalcloudstorage.title");
-            guiGraphics.drawString(this.font, title, this.x + (this.width - this.font.width(title)) / 2, bgY + 10, 4210752, false);
+            int titleWidth = this.font.width(title);
+            int titleX = this.x + (this.width - titleWidth) / 2;
+            if (titleWidth > 26 * this.maxColumns + 2) {
+                title = Component.translatable("settings.personalcloudstorage.title.narrow");
+                titleWidth = this.font.width(title);
+                titleX = this.x + (this.width - titleWidth) / 2;
+            }
+            guiGraphics.drawString(this.font, title, titleX, bgY + 10, 4210752, false);
         }
         for (AbstractWidget widget : widgets) {
             widget.render(guiGraphics, mouseX, mouseY, partialTick);
@@ -226,22 +242,6 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
 
     }
 
-    class ToggleVisibilityButton extends StateSwitchingButton {
-
-        public ToggleVisibilityButton(int x, int y, int width, int height, boolean initialState) {
-            super(x, y, width, height, initialState);
-            this.initTextureValues(0, 91, 12, 0, WIDGET_TEXTURE);
-        }
-
-        @Override
-        public void onClick(double mouseX, double mouseY) {
-            super.onClick(mouseX, mouseY);
-            toggleVisibility();
-            this.setStateTriggered(CloudStorageSettingsComponent.visible);
-            CloudStorageSettingsComponent.this.update();
-        }
-    }
-
     @Override
     public void setFocused(boolean focused) {
 
@@ -300,6 +300,34 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
     public void visitWidgets(Consumer<AbstractWidget> consumer) {
         for (AbstractWidget widget : widgets) {
             consumer.accept(widget);
+        }
+    }
+
+    class ToggleVisibilityButton extends StateSwitchingButton {
+
+        public ToggleVisibilityButton(int x, int y, int width, int height, boolean initialState) {
+            super(x, y, width, height, initialState);
+            this.initTextureValues(0, 91, 12, 0, WIDGET_TEXTURE);
+        }
+
+        @Override
+        public void onClick(double mouseX, double mouseY) {
+            super.onClick(mouseX, mouseY);
+            toggleVisibility();
+            this.setStateTriggered(CloudStorageSettingsComponent.visible);
+            CloudStorageSettingsComponent.this.update();
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (super.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            } else if (PersonalCloudStorageClient.clothConfig && this.active && this.visible && button == 1 && this.clicked(mouseX, mouseY)) {
+                this.playDownSound(minecraft.getSoundManager());
+                minecraft.setScreen(ModConfigScreenFactory.create(minecraft.screen));
+                return true;
+            }
+            return false;
         }
     }
 }
