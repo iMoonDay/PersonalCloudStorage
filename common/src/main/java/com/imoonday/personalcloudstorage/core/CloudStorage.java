@@ -136,24 +136,32 @@ public class CloudStorage implements IterableWithSize<PagedList> {
                 }
             }
             AbstractContainerMenu menu = serverPlayer.containerMenu;
-            if (!check || !(menu instanceof CloudStorageMenu cloudStorageMenu) || cloudStorageMenu.getCloudStorage() == this) {
-                Services.PLATFORM.sendToPlayer(serverPlayer, new SyncCloudStorageS2CPacket(this));
+            if (!check || !(menu instanceof CloudStorageMenu cloudStorageMenu)) {
+                syncToPlayer(serverPlayer);
+            } else if (cloudStorageMenu.getCloudStorage() == this) {
+                syncToPlayer(serverPlayer);
+                cloudStorageMenu.updateSlots();
             }
             if (server != null) {
-                syncToVisitors(server);
+                syncToVisitors(server, player);
             }
         }
     }
 
-    public void syncToVisitors(MinecraftServer server) {
+    public void syncToVisitors(MinecraftServer server, @Nullable Player except) {
         List<ServerPlayer> players = server.getPlayerList().getPlayers();
         for (ServerPlayer otherPlayer : players) {
+            if (otherPlayer == except) continue;
             AbstractContainerMenu menu = otherPlayer.containerMenu;
             if (menu instanceof CloudStorageMenu cloudStorageMenu && cloudStorageMenu.getCloudStorage() == this) {
-                Services.PLATFORM.sendToPlayer(otherPlayer, new SyncCloudStorageS2CPacket(this));
+                syncToPlayer(otherPlayer);
                 cloudStorageMenu.updateSlots();
             }
         }
+    }
+
+    public void syncToPlayer(ServerPlayer player) {
+        Services.PLATFORM.sendToPlayer(player, new SyncCloudStorageS2CPacket(this));
     }
 
     @NotNull

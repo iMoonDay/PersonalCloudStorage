@@ -37,11 +37,7 @@ public final class PersonalCloudStorageFabricClient implements ClientModInitiali
         }
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
             for (KeyBinding key : ModKeys.KEYS) {
-                if (key.hasPressAction()) {
-                    while (key.getKeyMapping().consumeClick()) {
-                        key.onPress(minecraft);
-                    }
-                }
+                key.tick();
             }
         });
     }
