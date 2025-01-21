@@ -3,6 +3,7 @@ package com.imoonday.personalcloudstorage.client.screen;
 import com.imoonday.personalcloudstorage.api.CloudStorageListener;
 import com.imoonday.personalcloudstorage.client.ClientConfig;
 import com.imoonday.personalcloudstorage.client.ModKeys;
+import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
 import com.imoonday.personalcloudstorage.client.screen.menu.CloudStorageMenu;
 import com.imoonday.personalcloudstorage.client.screen.widget.CloudStorageSettingsComponent;
 import com.imoonday.personalcloudstorage.core.CloudStorage;
@@ -128,6 +129,11 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
                                       .tooltip(Tooltip.create(multiPages ? REMOVE_PAGE_TEXT : CANNOT_DELETE_TEXT))
                                       .build();
             this.addRenderableWidget(this.removeButton);
+
+            if (PersonalCloudStorageClient.inventoryProfilesNext) {
+                this.addButton.setX(this.addButton.getX() - 48);
+                this.removeButton.setX(this.removeButton.getX() - 48);
+            }
         }
 
         this.onUpdate();

@@ -217,9 +217,10 @@ public class CloudStorage implements IterableWithSize<PagedList> {
     @Nullable
     public PagedList removeLastPage() {
         if (totalPages > 1) {
-            PagedList list = getPage(totalPages-- - 1);
+            PagedList list = getPage(totalPages - 1);
             list.setRemoved(true);
             pages.remove(list.getPage());
+            totalPages--;
             return list;
         }
         return null;

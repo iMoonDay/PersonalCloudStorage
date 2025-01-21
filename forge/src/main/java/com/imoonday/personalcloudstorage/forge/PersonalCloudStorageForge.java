@@ -14,9 +14,9 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -37,7 +37,9 @@ public final class PersonalCloudStorageForge {
         ITEMS.register(eventBus);
         MENU_TYPES.register(eventBus);
 
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientEventHandler::init);
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ClientEventHandler.init();
+        }
     }
 
     @SubscribeEvent
