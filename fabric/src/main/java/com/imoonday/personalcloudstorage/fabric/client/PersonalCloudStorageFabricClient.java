@@ -10,7 +10,10 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 
 public final class PersonalCloudStorageFabricClient implements ClientModInitializer {
 
@@ -19,6 +22,7 @@ public final class PersonalCloudStorageFabricClient implements ClientModInitiali
         PersonalCloudStorageClient.initClient();
         registerKeys();
         registerMenuScreens();
+        registerScreenEvents();
         ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
             ClientHandler.onClientTick(minecraft.player);
         });
@@ -44,5 +48,17 @@ public final class PersonalCloudStorageFabricClient implements ClientModInitiali
 
     private void registerMenuScreens() {
         MenuScreens.register(ModMenuType.CLOUD_STORAGE.get(), CloudStorageScreen::new);
+    }
+
+    private void registerScreenEvents() {
+        ScreenEvents.BEFORE_INIT.register((minecraft, screen, scaledWidth, scaledHeight) -> {
+            if (screen instanceof EffectRenderingInventoryScreen<?> inventoryScreen) {
+                ScreenKeyboardEvents.afterKeyPress(inventoryScreen).register((screen1, key, scancode, modifiers) -> {
+                    if (ModKeys.OPEN_CLOUD_STORAGE_INVENTORY.matches(key, scancode)) {
+                        ClientHandler.openCloudStorage();
+                    }
+                });
+            }
+        });
     }
 }

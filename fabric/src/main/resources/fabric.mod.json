@@ -8,7 +8,9 @@
     "iMoonDay"
   ],
   "contact": {
-    "homepage": ""
+    "homepage": "https://github.com/iMoonDay/PersonalCloudStorage",
+    "issues": "https://github.com/iMoonDay/PersonalCloudStorage/issues",
+    "sources": "https://github.com/iMoonDay/PersonalCloudStorage"
   },
   "license": "MIT",
   "icon": "assets/personalcloudstorage/icon.png",

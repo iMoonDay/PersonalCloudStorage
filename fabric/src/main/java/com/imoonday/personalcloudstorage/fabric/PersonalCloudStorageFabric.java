@@ -1,20 +1,15 @@
 package com.imoonday.personalcloudstorage.fabric;
 
 import com.imoonday.personalcloudstorage.PersonalCloudStorage;
-import com.imoonday.personalcloudstorage.client.ClientHandler;
-import com.imoonday.personalcloudstorage.client.ModKeys;
 import com.imoonday.personalcloudstorage.command.CommandHandler;
 import com.imoonday.personalcloudstorage.event.EventHandler;
 import com.imoonday.personalcloudstorage.fabric.network.FabricNetworkHandler;
 import com.imoonday.personalcloudstorage.init.ModItems;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
-import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.world.item.CreativeModeTabs;
 
 public final class PersonalCloudStorageFabric implements ModInitializer {
@@ -23,10 +18,6 @@ public final class PersonalCloudStorageFabric implements ModInitializer {
     public void onInitialize() {
         PersonalCloudStorage.init();
         FabricNetworkHandler.init();
-        registerEvents();
-    }
-
-    private void registerEvents() {
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             EventHandler.onPlayerJoin(listener.player);
         });
@@ -36,18 +27,5 @@ public final class PersonalCloudStorageFabric implements ModInitializer {
         });
         CommandRegistrationCallback.EVENT.register(CommandHandler::registerCommands);
         ServerLifecycleEvents.SERVER_STARTING.register(server -> EventHandler.loadConfig());
-        registerScreenEvents();
-    }
-
-    private void registerScreenEvents() {
-        ScreenEvents.BEFORE_INIT.register((minecraft, screen, scaledWidth, scaledHeight) -> {
-            if (screen instanceof EffectRenderingInventoryScreen<?> inventoryScreen) {
-                ScreenKeyboardEvents.afterKeyPress(inventoryScreen).register((screen1, key, scancode, modifiers) -> {
-                    if (ModKeys.OPEN_CLOUD_STORAGE_INVENTORY.matches(key, scancode)) {
-                        ClientHandler.openCloudStorage();
-                    }
-                });
-            }
-        });
     }
 }
