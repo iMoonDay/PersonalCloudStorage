@@ -4,7 +4,7 @@ import com.imoonday.personalcloudstorage.PersonalCloudStorage;
 import com.imoonday.personalcloudstorage.client.ClientCloudStorage;
 import com.imoonday.personalcloudstorage.client.ModConfigScreenFactory;
 import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
-import com.imoonday.personalcloudstorage.core.CloudStorageSettings;
+import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
@@ -34,7 +34,7 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
     public static final ResourceLocation WIDGET_TEXTURE = PersonalCloudStorage.id("textures/gui/cloud_storage.png");
     private static final int SWITCH_BUTTON_SIZE = 11;
     public static boolean visible = true;
-    private final CloudStorageSettings settings = ClientCloudStorage.get().getSettings();
+    private final CloudStorage.Settings settings = ClientCloudStorage.get().getSettings();
     private final Minecraft minecraft;
     private final Font font;
     private final List<AbstractWidget> widgets = new ArrayList<>();
@@ -120,23 +120,29 @@ public class CloudStorageSettingsComponent implements Renderable, GuiEventListen
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         RenderSystem.enableDepthTest();
         if (visible) {
-            int bgY = getBgY();
-            guiGraphics.blitNineSliced(WIDGET_TEXTURE, this.x, bgY, this.width, this.height, 8, 24, 24, 0, 103);
-
-            Component title = Component.translatable("settings.personalcloudstorage.title");
-            int titleWidth = this.font.width(title);
-            int titleX = this.x + (this.width - titleWidth) / 2;
-            if (titleWidth > 26 * this.maxColumns + 2) {
-                title = Component.translatable("settings.personalcloudstorage.title.narrow");
-                titleWidth = this.font.width(title);
-                titleX = this.x + (this.width - titleWidth) / 2;
-            }
-            guiGraphics.drawString(this.font, title, titleX, bgY + 10, 4210752, false);
+            renderBackground(guiGraphics);
+            renderTitle(guiGraphics);
         }
         for (AbstractWidget widget : widgets) {
             widget.render(guiGraphics, mouseX, mouseY, partialTick);
         }
         RenderSystem.disableDepthTest();
+    }
+
+    private void renderBackground(GuiGraphics guiGraphics) {
+        guiGraphics.blitNineSliced(WIDGET_TEXTURE, this.x, getBgY(), this.width, this.height, 8, 24, 24, 0, 103);
+    }
+
+    private void renderTitle(GuiGraphics guiGraphics) {
+        Component title = Component.translatable("settings.personalcloudstorage.title");
+        int titleWidth = this.font.width(title);
+        int titleX = this.x + (this.width - titleWidth) / 2;
+        if (titleWidth > 26 * this.maxColumns + 2) {
+            title = Component.translatable("settings.personalcloudstorage.title.narrow");
+            titleWidth = this.font.width(title);
+            titleX = this.x + (this.width - titleWidth) / 2;
+        }
+        guiGraphics.drawString(this.font, title, titleX, getBgY() + 10, 4210752, false);
     }
 
     @Override

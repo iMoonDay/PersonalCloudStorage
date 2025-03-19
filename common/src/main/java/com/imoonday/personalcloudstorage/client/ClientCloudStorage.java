@@ -22,7 +22,7 @@ public class ClientCloudStorage extends CloudStorage {
     public void updateClient(UUID playerUUID, int pageSize, int totalPages) {
         this.playerUUID = playerUUID;
         this.pageSize = pageSize;
-        this.forEach(page -> page.setSize(this.pageSize), false);
+        this.forEach(page -> page.setSize(this.pageSize));
         this.totalPages = totalPages;
         synced = true;
     }

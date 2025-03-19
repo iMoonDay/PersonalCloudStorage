@@ -17,15 +17,15 @@ public class CloudStorageButton extends ImageButton {
 
     public static final ResourceLocation TEXTURE = PersonalCloudStorage.id("textures/gui/cloud_storage.png");
     private boolean animated;
-    private float offset;
+    private float offsetY;
 
     public CloudStorageButton(int x, int y, boolean animated) {
         super(x, y, 20, 16, 0, 0, 19, TEXTURE, button -> ClientHandler.openCloudStorage());
         this.animated = animated;
-        this.offset = this.getMaxOffset();
+        this.offsetY = this.getMaxOffsetY();
     }
 
-    public int getMaxOffset() {
+    public int getMaxOffsetY() {
         return animated ? Math.max(this.height - 3, 0) : 0;
     }
 
@@ -40,9 +40,9 @@ public class CloudStorageButton extends ImageButton {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.offset += (isHovered ? -partialTick : partialTick) * 3;
-        this.offset = Mth.clamp(this.offset, 0, this.getMaxOffset());
-        int y = (int) (this.getY() + this.offset);
+        this.offsetY += (isHovered ? -partialTick : partialTick) * 3;
+        this.offsetY = Mth.clamp(this.offsetY, 0, this.getMaxOffsetY());
+        int y = (int) (this.getY() + this.offsetY);
         int height = this.getY() + this.height - y;
         this.renderTexture(guiGraphics, this.resourceLocation, this.getX(), y, this.xTexStart, this.yTexStart, this.yDiffTex, this.width, height, this.textureWidth, this.textureHeight);
     }

@@ -2,6 +2,7 @@ plugins {
     id 'dev.architectury.loom' version '1.9-SNAPSHOT' apply false
     id 'architectury-plugin' version '3.4-SNAPSHOT'
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id "me.modmuss50.mod-publish-plugin" version "0.8.4"
 }
 
 architectury {
@@ -74,5 +75,57 @@ subprojects {
             // The repositories here will be used for publishing your artifact, not for
             // retrieving dependencies.
         }
+    }
+}
+
+publishMods {
+    changelog = file("CHANGELOG.md").text
+    type = STABLE
+
+    def fbName = "[Fabric 1.20.1] v$rootProject.mod_version"
+    def fgName = "[Forge 1.20.1] v$rootProject.mod_version"
+
+    def cfOptions = curseforgeOptions {
+        accessToken = providers.environmentVariable("CURSEFORGE_API_TOKEN")
+        projectId = "1183138"
+        minecraftVersions.add("1.20.1")
+    }
+
+    def mrOptions = modrinthOptions {
+        accessToken = providers.environmentVariable("MODRINTH_API_TOKEN")
+        projectId = "5wRo0GXJ"
+        minecraftVersions.add("1.20.1")
+    }
+
+    curseforge("curseforgeFabric") {
+        from cfOptions
+        file project(":fabric")
+        modLoaders.add("fabric")
+        displayName = fbName
+        optional("cloth-config", "modmenu")
+    }
+
+    curseforge("curseforgeForge") {
+        from cfOptions
+        file project(":forge")
+        modLoaders.add("forge")
+        displayName = fgName
+        optional("cloth-config")
+    }
+
+    modrinth("modrinthFabric") {
+        from mrOptions
+        file project(":fabric")
+        modLoaders.add("fabric")
+        displayName = fbName
+        optional("cloth-config", "modmenu")
+    }
+
+    modrinth("modrinthForge") {
+        from mrOptions
+        file project(":forge")
+        modLoaders.add("forge")
+        displayName = fgName
+        optional("cloth-config")
     }
 }

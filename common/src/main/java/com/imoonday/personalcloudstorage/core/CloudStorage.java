@@ -28,18 +28,19 @@ import org.slf4j.Logger;
 
 import java.util.*;
 
-public class CloudStorage implements IterableWithSize<PagedList> {
+public class CloudStorage implements IterableWithSize<PageContainer> {
 
     public static final int SLOTS_PER_ROW = 9;
     public static final int MAX_ROWS = 6;
     private static final Logger LOGGER = LogUtils.getLogger();
-    protected final Map<Integer, PagedList> pages;
-    protected final CloudStorageSettings settings = new CloudStorageSettings();
+    protected final Map<Integer, PageContainer> pages;
+    protected final Settings settings = new Settings();
     protected UUID playerUUID;
     protected int pageSize;
     protected int totalPages;
     @Nullable
     protected Component playerName;
+    protected final List<Player> visitors = new ArrayList<>();
 
     public CloudStorage(UUID playerUUID) {
         this(playerUUID, 3);
@@ -56,7 +57,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         if (totalPages == Integer.MAX_VALUE) {
             return totalPages - 1;
         }
-        pages.put(totalPages, new PagedList(totalPages, pageSize));
+        pages.put(totalPages, new PageContainer(totalPages, pageSize));
         return totalPages++;
     }
 
@@ -64,7 +65,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         return Mth.clamp(rows, 1, MAX_ROWS);
     }
 
-    protected CloudStorage(UUID playerUUID, int pageSize, int totalPages, Map<Integer, PagedList> pages) {
+    protected CloudStorage(UUID playerUUID, int pageSize, int totalPages, Map<Integer, PageContainer> pages) {
         this.playerUUID = playerUUID;
         this.pageSize = pageSize;
         this.totalPages = totalPages;
@@ -77,21 +78,21 @@ public class CloudStorage implements IterableWithSize<PagedList> {
     }
 
     @Override
-    public @NotNull PagedList get(int index) {
+    public @NotNull PageContainer get(int index) {
         return getPage(index);
     }
 
     @Override
-    public @Nullable PagedList getUnchecked(int index) {
+    public @Nullable PageContainer getUnchecked(int index) {
         return this.pages.get(index);
     }
 
-    public PagedList getPage(int page) {
+    public PageContainer getPage(int page) {
         if (totalPages <= 0) {
-            return PagedList.empty();
+            return PageContainer.empty();
         }
         page = Mth.clamp(page, 0, totalPages - 1);
-        return pages.computeIfAbsent(page, i -> new PagedList(i, this.pageSize));
+        return pages.computeIfAbsent(page, i -> new PageContainer(i, this.pageSize));
     }
 
     public void copyFrom(CloudStorage other) {
@@ -118,7 +119,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
     }
 
     public void openMenu(ServerPlayer player) {
-        syncToClient(player);
+        syncToPlayer(player);
         player.openMenu(new SimpleMenuProvider((i, inventory, player1) -> new CloudStorageMenu(i, inventory, this), getMenuTitle(player)));
     }
 
@@ -142,19 +143,16 @@ public class CloudStorage implements IterableWithSize<PagedList> {
                 syncToPlayer(serverPlayer);
                 cloudStorageMenu.updateSlots();
             }
-            if (server != null) {
-                syncToVisitors(server, player);
-            }
+            syncToVisitors(player);
         }
     }
 
-    public void syncToVisitors(MinecraftServer server, @Nullable Player except) {
-        List<ServerPlayer> players = server.getPlayerList().getPlayers();
-        for (ServerPlayer otherPlayer : players) {
-            if (otherPlayer == except) continue;
+    public void syncToVisitors(@Nullable Player except) {
+        for (Player otherPlayer : this.visitors) {
+            if (otherPlayer == except || !(otherPlayer instanceof ServerPlayer serverPlayer)) continue;
+            syncToPlayer(serverPlayer);
             AbstractContainerMenu menu = otherPlayer.containerMenu;
-            if (menu instanceof CloudStorageMenu cloudStorageMenu && cloudStorageMenu.getCloudStorage() == this) {
-                syncToPlayer(otherPlayer);
+            if (menu instanceof CloudStorageMenu cloudStorageMenu) {
                 cloudStorageMenu.updateSlots();
             }
         }
@@ -194,15 +192,15 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         this.playerName = playerName;
     }
 
-    public List<PagedSlot> getAllSlots() {
-        List<PagedSlot> items = new ArrayList<>(pageSize);
-        forEach(page -> items.addAll(page.getSlots()), true);
-        return items;
+    public List<PageSlot> getAllSlots() {
+        List<PageSlot> slots = new ArrayList<>(pageSize * totalPages);
+        forEach(page -> slots.addAll(page.getSlots()), true);
+        return slots;
     }
 
     public List<ItemStack> getAllItems() {
-        List<ItemStack> items = new ArrayList<>(this.pages.size());
-        forEach(page -> items.addAll(page.getItems()), false);
+        List<ItemStack> items = new ArrayList<>(pageSize * totalPages);
+        forEach(page -> items.addAll(page.getItems()));
         return items;
     }
 
@@ -223,9 +221,9 @@ public class CloudStorage implements IterableWithSize<PagedList> {
     }
 
     @Nullable
-    public PagedList removeLastPage() {
+    public PageContainer removeLastPage() {
         if (totalPages > 1) {
-            PagedList list = getPage(totalPages - 1);
+            PageContainer list = getPage(totalPages - 1);
             list.setRemoved(true);
             pages.remove(list.getPage());
             totalPages--;
@@ -236,7 +234,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
 
     public int removeLastPageIfEmpty() {
         if (totalPages > 1) {
-            PagedList list = getPage(totalPages - 1);
+            PageContainer list = getPage(totalPages - 1);
             if (list.isEmpty()) {
                 list.setRemoved(true);
                 pages.remove(list.getPage());
@@ -272,7 +270,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
 
     public void updatePageSize(int rows) {
         this.pageSize = fixRows(rows) * SLOTS_PER_ROW;
-        forEach(page -> page.setSize(this.pageSize), false);
+        forEach(page -> page.setSize(this.pageSize));
     }
 
     public void updateTotalPages(int totalPages) {
@@ -297,9 +295,9 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         return page >= 0 && page < totalPages;
     }
 
-    public PagedList getNextPage(PagedList page, boolean cycle) {
+    public PageContainer getNextPage(PageContainer page, boolean cycle) {
         if (page == null || totalPages <= 0) {
-            return PagedList.empty();
+            return PageContainer.empty();
         }
         int currentPage = page.getPage();
         int next = currentPage + 1;
@@ -309,9 +307,9 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         return getPage(next);
     }
 
-    public PagedList getPreviousPage(PagedList page, boolean cycle) {
+    public PageContainer getPreviousPage(PageContainer page, boolean cycle) {
         if (page == null || totalPages <= 0) {
-            return PagedList.empty();
+            return PageContainer.empty();
         }
         int currentPage = page.getPage();
         int previous = currentPage - 1;
@@ -325,18 +323,18 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         if (item == null || item.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        return findFirstOrDefault(page -> page.insertItem(item).isEmpty() ? ItemStack.EMPTY : null, item);
+        return findFirstOrDefault(page -> page.insertItem(item).isEmpty() ? ItemStack.EMPTY : null, item, true);
     }
 
     public ItemStack takeItem(int page, int slot) {
         if (page < 0 || page >= totalPages || slot < 0 || slot >= pageSize) {
             return ItemStack.EMPTY;
         }
-        PagedSlot pagedSlot = getPage(page).get(slot);
-        if (pagedSlot.isEmpty()) {
+        PageSlot pageSlot = getPage(page).get(slot);
+        if (pageSlot.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        return pagedSlot.takeItem();
+        return pageSlot.takeItem();
     }
 
     public ItemStack replaceItem(int page, int slot, ItemStack item) {
@@ -352,21 +350,19 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         }
 
         int[] remainingCount = {maxCount};
-        return findFirstOrElse(page -> {
-            for (PagedSlot slot : page) {
-                if (slot != null && slot.getItem().is(item)) {
-                    ItemStack taken = slot.split(remainingCount[0]);
-                    if (!taken.isEmpty()) {
-                        int takenCount = taken.getCount();
-                        remainingCount[0] -= takenCount;
-                    }
-                    if (remainingCount[0] <= 0) {
-                        return maxCount;
-                    }
+        return findFirstOrElse(page -> page.findFirstOrDefault(slot -> {
+            if (slot.getItem().is(item)) {
+                ItemStack taken = slot.split(remainingCount[0]);
+                if (!taken.isEmpty()) {
+                    int takenCount = taken.getCount();
+                    remainingCount[0] -= takenCount;
+                }
+                if (remainingCount[0] <= 0) {
+                    return maxCount;
                 }
             }
             return null;
-        }, () -> maxCount - remainingCount[0]);
+        }, null, false), () -> maxCount - remainingCount[0], false);
     }
 
     public boolean hasItem(Item item, int count) {
@@ -375,21 +371,19 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         }
 
         int[] remainingCount = {count};
-        return findFirstOrDefault(page -> {
-            for (PagedSlot slot : page) {
-                if (slot != null && slot.getItem().is(item)) {
-                    remainingCount[0] -= slot.getCount();
-                    if (remainingCount[0] <= 0) {
-                        return true;
-                    }
+        return findFirstOrDefault(page -> page.findFirstOrDefault(slot -> {
+            if (slot.getItem().is(item)) {
+                remainingCount[0] -= slot.getCount();
+                if (remainingCount[0] <= 0) {
+                    return true;
                 }
             }
             return null;
-        }, false);
+        }, null, false), false, true);
     }
 
     public void clear() {
-        forEach(PagedList::clear, false);
+        forEach(PageContainer::clearContent);
     }
 
     public void tick(Player player) {
@@ -415,25 +409,23 @@ public class CloudStorage implements IterableWithSize<PagedList> {
 
         ItemStack result = item.copyWithCount(0);
         int[] remainingCount = {maxCount};
-        return findFirstOrDefault(page -> {
-            for (PagedSlot slot : page) {
-                if (slot != null && slot.isSameItemSameTags(item)) {
-                    ItemStack taken = slot.split(remainingCount[0]);
-                    if (!taken.isEmpty()) {
-                        int takenCount = taken.getCount();
-                        result.grow(takenCount);
-                        remainingCount[0] -= takenCount;
-                    }
-                    if (remainingCount[0] <= 0) {
-                        return result;
-                    }
+        return findFirstOrDefault(page -> page.findFirstOrDefault(slot -> {
+            if (slot.isSameItemSameTags(item)) {
+                ItemStack taken = slot.split(remainingCount[0]);
+                if (!taken.isEmpty()) {
+                    int takenCount = taken.getCount();
+                    result.grow(takenCount);
+                    remainingCount[0] -= takenCount;
+                }
+                if (remainingCount[0] <= 0) {
+                    return result;
                 }
             }
             return null;
-        }, result);
+        }, null, false), result, false);
     }
 
-    public CloudStorageSettings getSettings() {
+    public Settings getSettings() {
         return settings;
     }
 
@@ -444,8 +436,12 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         tag.putUUID("playerUUID", playerUUID);
         tag.putInt("pageSize", pageSize);
         tag.putInt("totalPages", totalPages);
-        ListTag pagesTag = new ListTag();
-        forEach(page -> pagesTag.add(page.save(new CompoundTag())), false);
+        CompoundTag pagesTag = new CompoundTag();
+        forEach(page -> {
+            if (!page.isEmpty()) {
+                pagesTag.put(String.valueOf(page.getPage()), page.toSlotsTag());
+            }
+        });
         tag.put("pages", pagesTag);
         if (playerName != null) {
             tag.putString("playerName", Component.Serializer.toJson(playerName));
@@ -454,33 +450,20 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         return tag;
     }
 
-    public void load(CompoundTag tag) {
-        if (tag == null) return;
-        if (tag.contains("pageSize")) {
-            pageSize = tag.getInt("pageSize");
-        }
-        if (tag.contains("totalPages")) {
-            totalPages = tag.getInt("totalPages");
-        }
-        if (tag.contains("pages")) {
-            pages.clear();
-            ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
-            for (int i = 0; i < pagesTag.size(); i++) {
-                PagedList page = PagedList.fromTag(pagesTag.getCompound(i));
-                pages.put(page.getPage(), page);
-            }
-        }
-        if (tag.contains("playerName")) {
-            playerName = Component.Serializer.fromJson(tag.getString("playerName"));
-        }
-        if (tag.contains("settings")) {
-            settings.load(tag.getCompound("settings"));
-        }
-    }
-
     public void loadSettings(CompoundTag tag) {
         if (tag != null) {
             settings.load(tag);
+        }
+    }
+
+    public void startOpen(Player player) {
+        this.visitors.add(player);
+    }
+
+    public void stopOpen(Player player) {
+        this.visitors.remove(player);
+        if (player instanceof ServerPlayer serverPlayer) {
+            of(serverPlayer).syncToPlayer(serverPlayer);
         }
     }
 
@@ -527,12 +510,7 @@ public class CloudStorage implements IterableWithSize<PagedList> {
             UUID playerUUID = tag.getUUID("playerUUID");
             int pageSize = tag.getInt("pageSize");
             int totalPages = tag.getInt("totalPages");
-            Map<Integer, PagedList> pages = new HashMap<>();
-            ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
-            for (int i = 0; i < pagesTag.size(); i++) {
-                PagedList page = PagedList.fromTag(pagesTag.getCompound(i));
-                pages.put(page.getPage(), page);
-            }
+            Map<Integer, PageContainer> pages = parsePages(tag, pageSize);
             CloudStorage storage = new CloudStorage(playerUUID, pageSize, totalPages, pages);
             if (tag.contains("playerName")) {
                 storage.setPlayerName(Component.Serializer.fromJson(tag.getString("playerName")));
@@ -544,6 +522,71 @@ public class CloudStorage implements IterableWithSize<PagedList> {
         } catch (Throwable t) {
             LOGGER.error("Failed to load cloud storage from tag: {}", tag, t);
             return null;
+        }
+    }
+
+    private static Map<Integer, PageContainer> parsePages(CompoundTag tag, int pageSize) {
+        Map<Integer, PageContainer> pages;
+        if (tag.contains("pages", Tag.TAG_COMPOUND)) {
+            CompoundTag pagesTag = tag.getCompound("pages");
+            Set<String> keys = pagesTag.getAllKeys();
+            pages = new HashMap<>(keys.size());
+            for (String key : keys) {
+                try {
+                    int page = Integer.parseInt(key);
+                    Map<Integer, PageSlot> slots = PageContainer.parseSlotsFromTag(page, pageSize, pagesTag.getCompound(key));
+                    pages.put(page, new PageContainer(slots, page, pageSize));
+                } catch (NumberFormatException ignore) {
+
+                }
+            }
+        } else if (tag.contains("pages", Tag.TAG_LIST)) {
+            ListTag pagesTag = tag.getList("pages", Tag.TAG_COMPOUND);
+            int size = pagesTag.size();
+            pages = new HashMap<>(size);
+            for (int i = 0; i < size; i++) {
+                PageContainer page = PageContainer.fromTag(pagesTag.getCompound(i));
+                pages.put(page.getPage(), page);
+            }
+        } else {
+            pages = new HashMap<>();
+        }
+
+        return pages;
+    }
+
+    public static class Settings {
+
+        public boolean autoDownload;
+        public boolean autoUpload;
+        public boolean cycleThroughPages;
+
+        public CompoundTag save(CompoundTag tag) {
+            tag.putBoolean("autoDownload", autoDownload);
+            tag.putBoolean("autoUpload", autoUpload);
+            tag.putBoolean("cycleThroughPages", cycleThroughPages);
+            return tag;
+        }
+
+        public void load(CompoundTag tag) {
+            if (tag.contains("autoDownload")) {
+                autoDownload = tag.getBoolean("autoDownload");
+            }
+            if (tag.contains("autoUpload")) {
+                autoUpload = tag.getBoolean("autoUpload");
+            }
+            if (tag.contains("cycleThroughPages")) {
+                cycleThroughPages = tag.getBoolean("cycleThroughPages");
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "CloudStorageSettings{" +
+                   "autoDownload=" + autoDownload +
+                   ", autoUpload=" + autoUpload +
+                   ", cycleThroughPages=" + cycleThroughPages +
+                   '}';
         }
     }
 }

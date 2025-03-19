@@ -21,8 +21,8 @@ public class EventHandler {
     }
 
     public static void syncToClient(Player player) {
-        CloudStorage.of(player).syncToClient(player);
         if (player instanceof ServerPlayer serverPlayer) {
+            CloudStorage.of(player).syncToPlayer(serverPlayer);
             Services.PLATFORM.sendToPlayer(serverPlayer, new SyncConfigS2CPacket(ServerConfig.get().save(new CompoundTag())));
         }
     }

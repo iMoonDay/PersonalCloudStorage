@@ -7,7 +7,6 @@ import com.imoonday.personalcloudstorage.client.PersonalCloudStorageClient;
 import com.imoonday.personalcloudstorage.client.screen.menu.CloudStorageMenu;
 import com.imoonday.personalcloudstorage.client.screen.widget.CloudStorageSettingsComponent;
 import com.imoonday.personalcloudstorage.core.CloudStorage;
-import com.imoonday.personalcloudstorage.core.CloudStorageSettings;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -51,7 +50,7 @@ public class CloudStorageScreen extends AbstractContainerScreen<CloudStorageMenu
     public void onUpdate() {
         CloudStorage cloudStorage = this.menu.getCloudStorage();
         int totalPages = cloudStorage.getTotalPages();
-        CloudStorageSettings settings = cloudStorage.getSettings();
+        CloudStorage.Settings settings = cloudStorage.getSettings();
         boolean multiPages = totalPages > 1;
         int currentPage = this.menu.getCurrentPage();
 

@@ -2,7 +2,7 @@ package com.imoonday.personalcloudstorage.client.screen.menu;
 
 import com.imoonday.personalcloudstorage.config.ServerConfig;
 import com.imoonday.personalcloudstorage.core.CloudStorage;
-import com.imoonday.personalcloudstorage.core.PagedList;
+import com.imoonday.personalcloudstorage.core.PageContainer;
 import com.imoonday.personalcloudstorage.init.ModItems;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import com.imoonday.personalcloudstorage.mixin.SlotAccessor;
@@ -35,7 +35,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     private final int containerRows;
     private final List<CloudStorageSlot> cloudStorageSlots = new ArrayList<>();
     private final DataSlot currentPage = DataSlot.standalone();
-    private PagedList page;
+    private PageContainer page;
     @Nullable
     private Runnable onUpdate;
 
@@ -49,6 +49,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         this.player = playerInventory.player;
         this.level = player.level();
         this.cloudStorage = cloudStorage;
+        this.cloudStorage.startOpen(this.player);
         this.page = this.cloudStorage.getPage(0);
         this.updateSlots();
         this.containerRows = this.cloudStorage.getPageRows();
@@ -177,7 +178,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         int result;
         boolean ownCloudStorage = isOwnCloudStorage();
         if (forced) {
-            PagedList removed = cloudStorage.removeLastPage();
+            PageContainer removed = cloudStorage.removeLastPage();
             if (removed != null) {
                 removed.forEach(slot -> {
                     if (!slot.isEmpty()) {
@@ -186,7 +187,7 @@ public class CloudStorageMenu extends AbstractContainerMenu {
                             player.getInventory().placeItemBackInInventory(stack);
                         }
                     }
-                }, false);
+                });
                 result = 1;
             } else {
                 result = -1;
@@ -278,6 +279,12 @@ public class CloudStorageMenu extends AbstractContainerMenu {
 
     public int getContainerRows() {
         return this.containerRows;
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        this.cloudStorage.stopOpen(player);
     }
 
     private class CloudStorageSlot extends Slot {

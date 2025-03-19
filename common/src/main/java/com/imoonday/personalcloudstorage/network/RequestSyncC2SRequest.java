@@ -27,7 +27,7 @@ public class RequestSyncC2SRequest implements NetworkPacket {
     @Override
     public void handle(@Nullable Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
-            CloudStorage.of(serverPlayer).syncToClient(serverPlayer, false);
+            CloudStorage.of(serverPlayer).syncToPlayer(serverPlayer);
             Services.PLATFORM.sendToPlayer(serverPlayer, new SyncConfigS2CPacket(ServerConfig.get().save(new CompoundTag())));
         }
     }
