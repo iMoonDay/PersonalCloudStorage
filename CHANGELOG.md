@@ -1,2 +1,1 @@
-1. Optimize data storage logic
-2. Fix the issue where cloud storage settings would not automatically sync to the client when entering the world
+1. Fixed an issue of abnormality when the number of pages is too large

@@ -1,6 +1,7 @@
 package com.imoonday.personalcloudstorage.client;
 
 import com.imoonday.personalcloudstorage.api.CloudStorageListener;
+import com.imoonday.personalcloudstorage.client.screen.CloudStorageScreen;
 import com.imoonday.personalcloudstorage.config.ServerConfig;
 import com.imoonday.personalcloudstorage.core.CloudStorage;
 import com.imoonday.personalcloudstorage.network.OpenCloudStorageC2SRequest;
@@ -44,5 +45,11 @@ public class ClientHandler {
 
     public static UUID getOfflinePlayerUUID() {
         return UUIDUtil.createOfflinePlayerUUID(Minecraft.getInstance().getUser().getName());
+    }
+
+    public static void updateCurrentPage(int page) {
+        if (Minecraft.getInstance().screen instanceof CloudStorageScreen screen) {
+            screen.getMenu().setCurrentPage(page);
+        }
     }
 }

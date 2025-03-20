@@ -30,6 +30,7 @@ public class FabricNetworkHandler {
         registerMessage("request_sync", RequestSyncC2SRequest.class, RequestSyncC2SRequest::write, RequestSyncC2SRequest::new, RequestSyncC2SRequest::handle);
         registerMessage("sync_config", SyncConfigS2CPacket.class, SyncConfigS2CPacket::write, SyncConfigS2CPacket::new, SyncConfigS2CPacket::handle);
         registerMessage("sync_settings", SyncSettingsPacket.class, SyncSettingsPacket::write, SyncSettingsPacket::new, SyncSettingsPacket::handle);
+        registerMessage("sync_current_page", SyncCurrentPageS2CPacket.class, SyncCurrentPageS2CPacket::write, SyncCurrentPageS2CPacket::new, SyncCurrentPageS2CPacket::handle);
         PersonalCloudStorage.LOGGER.info(String.format("Initialized %s network!", PersonalCloudStorage.MOD_ID));
     }
 

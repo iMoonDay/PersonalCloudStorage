@@ -6,12 +6,14 @@ import com.imoonday.personalcloudstorage.core.PageContainer;
 import com.imoonday.personalcloudstorage.init.ModItems;
 import com.imoonday.personalcloudstorage.init.ModMenuType;
 import com.imoonday.personalcloudstorage.mixin.SlotAccessor;
+import com.imoonday.personalcloudstorage.network.SyncCurrentPageS2CPacket;
+import com.imoonday.personalcloudstorage.platform.Services;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -34,7 +36,8 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     private final CloudStorage cloudStorage;
     private final int containerRows;
     private final List<CloudStorageSlot> cloudStorageSlots = new ArrayList<>();
-    private final DataSlot currentPage = DataSlot.standalone();
+    private int prevPage = -1;
+    private int currentPage = 0;
     private PageContainer page;
     @Nullable
     private Runnable onUpdate;
@@ -74,18 +77,35 @@ public class CloudStorageMenu extends AbstractContainerMenu {
         for (i = 0; i < 9; ++i) {
             this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 161 + offset));
         }
-
-        this.addDataSlot(currentPage).set(0);
     }
 
     public void updateSlots() {
         page = cloudStorage.getPage(page.getPage());
-        currentPage.set(page.getPage());
+        currentPage = page.getPage();
         for (CloudStorageSlot slot : cloudStorageSlots) {
             slot.updateContainer(page);
         }
         if (!level.isClientSide) {
             this.broadcastChanges();
+        }
+    }
+
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+        syncCurrentPage();
+    }
+
+    @Override
+    public void sendAllDataToRemote() {
+        super.sendAllDataToRemote();
+        syncCurrentPage();
+    }
+
+    public void syncCurrentPage() {
+        if (player instanceof ServerPlayer serverPlayer && currentPage != prevPage) {
+            Services.PLATFORM.sendToPlayer(serverPlayer, new SyncCurrentPageS2CPacket(currentPage));
+            prevPage = currentPage;
         }
     }
 
@@ -270,7 +290,12 @@ public class CloudStorageMenu extends AbstractContainerMenu {
     }
 
     public int getCurrentPage() {
-        return currentPage.get();
+        return currentPage;
+    }
+
+    public void setCurrentPage(int page) {
+        this.currentPage = page;
+        syncCurrentPage();
     }
 
     public void setPageNoUpdate(int page) {
